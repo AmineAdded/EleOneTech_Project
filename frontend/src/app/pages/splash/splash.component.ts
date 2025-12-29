@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, Inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-splash',
@@ -235,12 +235,20 @@ export class SplashComponent implements OnInit {
     duration: 4 + Math.random() * 4
   }));
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
-    setTimeout(() => {
-      this.router.navigate(['/auth']);
-    }, 2200);
+    // Ne naviguer que dans le navigateur, pas pendant le SSR
+    if (isPlatformBrowser(this.platformId)) {
+      console.log('Splash screen loaded - will navigate to /auth in 2.2s');
+      setTimeout(() => {
+        console.log('Navigating to /auth');
+        this.router.navigate(['/auth']);
+      }, 2200);
+    }
   }
 
   getParticleStyle(particle: any) {
