@@ -1,6 +1,9 @@
+// frontend/src/app/components/articles-table/articles-table.component.ts
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ProcessManagerComponent, ProcessDetail } from '../process-manager/process-manager.component';
+import { ClientsManagerComponent } from '../clients-manager/clients-manager.component';
 
 interface Article {
   id?: number;
@@ -12,6 +15,7 @@ interface Article {
   typeProduit: string;
   prixUnitaire: number;
   mpq: number;
+  processes: ProcessDetail[];
   clients: string[];
   isEditing?: boolean;
 }
@@ -19,7 +23,7 @@ interface Article {
 @Component({
   selector: 'app-articles-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProcessManagerComponent, ClientsManagerComponent],
   template: `
     <div class="articles-container">
       <div class="table-header">
@@ -47,6 +51,7 @@ interface Article {
               <th>Prix Unitaire</th>
               <th>MPQ</th>
               <th>Clients</th>
+              <th>Process</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -141,29 +146,22 @@ interface Article {
               </td>
 
               <!-- Clients -->
-              <td>
-                <div class="clients-cell" *ngIf="!article.isEditing">
-                  <span class="client-badge" *ngFor="let client of article.clients">
-                    {{ client }}
-                  </span>
-                  <span *ngIf="article.clients.length === 0" class="empty-text">-</span>
-                </div>
-                <select
-                  *ngIf="article.isEditing"
-                  [(ngModel)]="selectedClient[i]"
-                  (change)="addClient(i, $event)"
-                  class="table-select">
-                  <option value="">Ajouter un client</option>
-                  <option *ngFor="let client of availableClients" [value]="client">
-                    {{ client }}
-                  </option>
-                </select>
-                <div *ngIf="article.isEditing && article.clients.length > 0" class="clients-editing">
-                  <span class="client-badge editable" *ngFor="let client of article.clients; let j = index">
-                    {{ client }}
-                    <button type="button" class="remove-client" (click)="removeClient(i, j)">×</button>
-                  </span>
-                </div>
+              <td class="clients-cell">
+                <app-clients-manager
+                  [clients]="article.clients"
+                  [isEditing]="article.isEditing || false"
+                  [availableClientsList]="availableClients"
+                  (clientsChange)="updateClients(i, $event)">
+                </app-clients-manager>
+              </td>
+
+              <!-- Process -->
+              <td class="process-cell">
+                <app-process-manager
+                  [processes]="article.processes"
+                  [isEditing]="article.isEditing || false"
+                  (processesChange)="updateProcesses(i, $event)">
+                </app-process-manager>
               </td>
 
               <!-- Actions -->
@@ -215,7 +213,7 @@ interface Article {
             </tr>
 
             <tr *ngIf="articles().length === 0">
-              <td colspan="10" class="empty-state">
+              <td colspan="11" class="empty-state">
                 <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                 </svg>
@@ -312,6 +310,16 @@ interface Article {
       vertical-align: middle;
     }
 
+    .clients-cell {
+      min-width: 200px;
+      max-width: 300px;
+    }
+
+    .process-cell {
+      min-width: 250px;
+      max-width: 350px;
+    }
+
     .table-input,
     .table-select {
       width: 100%;
@@ -339,58 +347,6 @@ interface Article {
 
     .table-input[type="number"] {
       text-align: right;
-    }
-
-    .clients-cell {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-      min-height: 32px;
-      align-items: center;
-    }
-
-    .clients-editing {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-      margin-top: 0.5rem;
-    }
-
-    .client-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.25rem 0.5rem;
-      background: linear-gradient(135deg, #9C27B0, #BA68C8);
-      color: white;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    .client-badge.editable {
-      padding-right: 0.25rem;
-    }
-
-    .remove-client {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 0 0.25rem;
-      line-height: 1;
-      opacity: 0.8;
-      transition: opacity 0.2s;
-    }
-
-    .remove-client:hover {
-      opacity: 1;
-    }
-
-    .empty-text {
-      color: #999;
-      font-style: italic;
     }
 
     .action-buttons {
@@ -470,13 +426,13 @@ interface Article {
       font-size: 1rem;
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1400px) {
       .table-wrapper {
         overflow-x: auto;
       }
 
       .articles-table {
-        min-width: 1200px;
+        min-width: 1500px;
       }
     }
 
@@ -499,7 +455,6 @@ interface Article {
 })
 export class ArticlesTableComponent {
   articles = signal<Article[]>([]);
-  selectedClient: { [key: number]: string } = {};
 
   availableClients = [
     'Client A',
@@ -521,6 +476,7 @@ export class ArticlesTableComponent {
       typeProduit: '',
       prixUnitaire: 0,
       mpq: 0,
+      processes: [],
       clients: [],
       isEditing: true
     };
@@ -530,7 +486,7 @@ export class ArticlesTableComponent {
 
   editRow(index: number) {
     const currentArticles = this.articles();
-    this.originalArticles[index] = { ...currentArticles[index] };
+    this.originalArticles[index] = JSON.parse(JSON.stringify(currentArticles[index]));
 
     this.articles.update(articles => {
       const updated = [...articles];
@@ -570,24 +526,18 @@ export class ArticlesTableComponent {
     }
   }
 
-  addClient(articleIndex: number, event: any) {
-    const clientName = event.target.value;
-    if (clientName) {
-      this.articles.update(articles => {
-        const updated = [...articles];
-        if (!updated[articleIndex].clients.includes(clientName)) {
-          updated[articleIndex].clients = [...updated[articleIndex].clients, clientName];
-        }
-        return updated;
-      });
-      this.selectedClient[articleIndex] = '';
-    }
-  }
-
-  removeClient(articleIndex: number, clientIndex: number) {
+  updateClients(articleIndex: number, clients: string[]) {
     this.articles.update(articles => {
       const updated = [...articles];
-      updated[articleIndex].clients = updated[articleIndex].clients.filter((_, i) => i !== clientIndex);
+      updated[articleIndex].clients = clients;
+      return updated;
+    });
+  }
+
+  updateProcesses(articleIndex: number, processes: ProcessDetail[]) {
+    this.articles.update(articles => {
+      const updated = [...articles];
+      updated[articleIndex].processes = processes;
       return updated;
     });
   }
