@@ -1,0 +1,256 @@
+<!-- frontend/src/app/components/articles-table/articles-table.component.html -->
+<div class="articles-container">
+  <div class="table-header">
+    <h2>Fiche d'Article</h2>
+    <div class="header-actions">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher (Ref, Article, Famille, Type produit...)"
+        [(ngModel)]="searchTerm"
+      />
+      <button class="add-btn" (click)="addNewRow()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        Ajouter un article
+      </button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="article-cards">
+      <div 
+        *ngFor="let article of filteredArticles(); let i = index" 
+        class="article-card"
+        [class.editing-card]="article.isEditing"
+      >
+        <!-- Ligne principale -->
+        <div class="card-main-row">
+          <!-- Ref -->
+          <div class="card-field">
+            <label>Ref</label>
+            <input
+              type="text"
+              [(ngModel)]="article.ref"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="Ref"
+            />
+          </div>
+
+          <!-- Article -->
+          <div class="card-field">
+            <label>Article</label>
+            <input
+              type="text"
+              [(ngModel)]="article.article"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="Article"
+            />
+          </div>
+
+          <!-- Famille -->
+          <div class="card-field">
+            <label>Famille</label>
+            <input
+              type="text"
+              [(ngModel)]="article.famille"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="Famille"
+            />
+          </div>
+
+          <!-- Sous Famille -->
+          <div class="card-field">
+            <label>Sous Famille</label>
+            <input
+              type="text"
+              [(ngModel)]="article.sousFamille"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="Sous Famille"
+            />
+          </div>
+
+          <!-- Type Process -->
+          <div class="card-field">
+            <label>Type de Process</label>
+            <select
+              [(ngModel)]="article.typeProcess"
+              [disabled]="!article.isEditing"
+              class="table-select"
+            >
+              <option value="">Sélectionner</option>
+              <option value="Seulement Annexe">Seulement Annexe</option>
+              <option value="Seulement Usine">Seulement Usine</option>
+              <option value="Annexe + Usine">Annexe + Usine</option>
+            </select>
+          </div>
+
+          <!-- Type Produit -->
+          <div class="card-field">
+            <label>Type de Produit</label>
+            <select
+              [(ngModel)]="article.typeProduit"
+              [disabled]="!article.isEditing"
+              class="table-select"
+            >
+              <option value="">Sélectionner</option>
+              <option value="Simple">Simple</option>
+              <option value="Composé">Composé</option>
+            </select>
+          </div>
+
+          <!-- Prix Unitaire -->
+          <div class="card-field">
+            <label>Prix Unitaire</label>
+            <input
+              type="number"
+              step="0.01"
+              [(ngModel)]="article.prixUnitaire"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="0.00"
+            />
+          </div>
+
+          <!-- MPQ -->
+          <div class="card-field">
+            <label>MPQ</label>
+            <input
+              type="number"
+              [(ngModel)]="article.mpq"
+              [disabled]="!article.isEditing"
+              class="table-input"
+              placeholder="0"
+            />
+          </div>
+
+          <!-- Clients -->
+          <div class="card-field card-field-wide">
+            <label>Clients</label>
+            <app-clients-manager
+              [clients]="article.clients"
+              [isEditing]="article.isEditing || false"
+              [availableClientsList]="availableClients"
+              (clientsChange)="updateClients(i, $event)"
+            >
+            </app-clients-manager>
+          </div>
+        </div>
+
+        <!-- Ligne secondaire (Process + Actions) -->
+        <div class="card-secondary-row">
+          <!-- Process -->
+          <div class="card-field card-field-process">
+            <label>Process</label>
+            <app-process-manager
+              [processes]="article.processes"
+              [isEditing]="article.isEditing || false"
+              (processesChange)="updateProcesses(i, $event)"
+            >
+            </app-process-manager>
+          </div>
+
+          <!-- Actions -->
+          <div class="card-field card-field-actions">
+            <label>Actions</label>
+            <div class="action-buttons">
+              <button
+                *ngIf="!article.isEditing"
+                class="edit-btn"
+                (click)="editRow(i)"
+                title="Modifier"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+
+              <button
+                *ngIf="article.isEditing"
+                class="save-btn"
+                (click)="saveRow(i)"
+                title="Enregistrer"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+
+              <button
+                *ngIf="article.isEditing"
+                class="cancel-btn"
+                (click)="cancelEdit(i)"
+                title="Annuler"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+
+              <button class="delete-btn" (click)="deleteRow(i)" title="Supprimer">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredArticles().length === 0 && articles().length > 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        <p>Aucun résultat trouvé pour cette recherche.</p>
+      </div>
+
+      <div *ngIf="articles().length === 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          />
+        </svg>
+        <p>Aucun article. Cliquez sur "Ajouter un article" pour commencer.</p>
+      </div>
+    </div>
+  </div>
+</div>
