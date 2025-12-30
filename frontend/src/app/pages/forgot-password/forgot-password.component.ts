@@ -2,341 +2,161 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { PasswordResetService } from '../../services/password-reset.service';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="forgot-container">
-      <div class="forgot-background">
-        <div class="bg-pattern"></div>
-      </div>
-
-      <div class="forgot-content">
-        <div class="forgot-card">
-          <!-- Back button -->
-          <button class="back-btn" (click)="goBack()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Retour
-          </button>
-
-          <!-- Logo -->
-          <div class="forgot-logo">
-            <div class="logo-circle">
-              <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                <g transform="translate(40, 40)">
-                  <circle cx="0" cy="-15" r="8" fill="#f4c2d1"/>
-                  <circle cx="15" cy="0" r="8" fill="#f4c2d1"/>
-                  <circle cx="0" cy="15" r="8" fill="#f4c2d1"/>
-                  <circle cx="-15" cy="0" r="8" fill="#f4c2d1"/>
-                  <circle cx="10" cy="-10" r="6" fill="#e6a3b8"/>
-                  <circle cx="10" cy="10" r="6" fill="#e6a3b8"/>
-                  <circle cx="-10" cy="10" r="6" fill="#e6a3b8"/>
-                  <circle cx="-10" cy="-10" r="6" fill="#e6a3b8"/>
-                  <circle cx="0" cy="0" r="8" fill="#d4a574"/>
-                  <circle cx="0" cy="0" r="5" fill="#e8c99f"/>
-                </g>
-              </svg>
-            </div>
-          </div>
-
-          <h2 class="forgot-title">Mot de passe oublié?</h2>
-          <p class="forgot-description">
-            Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
-          </p>
-
-          <!-- Email sent message -->
-          <div *ngIf="emailSent()" class="success-message">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <p>Un email de réinitialisation a été envoyé à votre adresse.</p>
-          </div>
-
-          <!-- Form -->
-          <form *ngIf="!emailSent()" class="forgot-form" (ngSubmit)="handleSubmit()">
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                [(ngModel)]="email"
-                name="email"
-                placeholder="votre@email.com"
-                required>
-            </div>
-
-            <button type="submit" class="submit-btn">
-              Envoyer le lien
-            </button>
-          </form>
-
-          <button *ngIf="emailSent()" class="submit-btn" (click)="goBack()">
-            Retour à la connexion
-          </button>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .forgot-container {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      padding: 2rem;
-    }
-
-    .forgot-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #fdfbfb 0%, #f8e9ed 50%, #fef5f7 100%);
-      z-index: -1;
-    }
-
-    .bg-pattern {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      opacity: 0.1;
-      background-image:
-        radial-gradient(circle at 20% 30%, rgba(244, 194, 209, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(230, 163, 184, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(212, 165, 116, 0.2) 0%, transparent 50%);
-    }
-
-    .forgot-content {
-      width: 100%;
-      max-width: 480px;
-      animation: fadeInUp 0.6s ease-out;
-    }
-
-    .forgot-card {
-      background: white;
-      border-radius: 24px;
-      padding: 3rem;
-      box-shadow:
-        0 20px 60px rgba(139, 76, 107, 0.15),
-        0 0 0 1px rgba(139, 76, 107, 0.05);
-      position: relative;
-    }
-
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: none;
-      border: none;
-      color: #a67c96;
-      font-size: 0.9rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      margin-bottom: 1.5rem;
-      transition: color 0.3s ease;
-    }
-
-    .back-btn:hover {
-      color: #8b4c6b;
-    }
-
-    .forgot-logo {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      display: flex;
-      justify-content: center;
-    }
-
-    .logo-circle {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, #fef5f7 0%, #f8e9ed 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 24px rgba(244, 194, 209, 0.25);
-    }
-
-    .logo-circle svg {
-      width: 45px;
-      height: 45px;
-    }
-
-    .forgot-title {
-      font-size: 1.8rem;
-      font-weight: 400;
-      color: #8b4c6b;
-      text-align: center;
-      margin: 0 0 1rem 0;
-      font-family: 'Georgia', serif;
-    }
-
-    .forgot-description {
-      text-align: center;
-      color: #a67c96;
-      margin-bottom: 2rem;
-      line-height: 1.6;
-    }
-
-    .success-message {
-      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
-      border: 2px solid #81c784;
-      border-radius: 12px;
-      padding: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      animation: slideIn 0.4s ease-out;
-    }
-
-    .success-message svg {
-      flex-shrink: 0;
-      stroke: #66bb6a;
-      stroke-width: 2;
-    }
-
-    .success-message p {
-      margin: 0;
-      color: #2e7d32;
-      line-height: 1.5;
-    }
-
-    .forgot-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .form-group label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #8b4c6b;
-    }
-
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .input-icon {
-      position: absolute;
-      left: 1rem;
-      color: #a67c96;
-      stroke-width: 2;
-      pointer-events: none;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      padding-left: 2.75rem;
-      border: 1.5px solid #e8e8e8;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      transition: all 0.3s ease;
-      background: #fafafa;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: #d4a3b8;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(212, 163, 184, 0.1);
-    }
-
-    .form-group input::placeholder {
-      color: #bbb;
-    }
-
-    .submit-btn {
-      padding: 1rem;
-      background: linear-gradient(135deg, #d4577a 0%, #c9688d 100%);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(212, 87, 122, 0.3);
-    }
-
-    .submit-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(212, 87, 122, 0.4);
-    }
-
-    .submit-btn:active {
-      transform: translateY(0);
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .forgot-card {
-        padding: 2rem 1.5rem;
-      }
-
-      .forgot-logo svg {
-        width: 60px;
-        height: 60px;
-      }
-
-      .forgot-title {
-        font-size: 1.5rem;
-      }
-    }
-  `]
+  templateUrl: './forgot-password.component.html',
+  styleUrls: ['./forgot-password.component.css']
 })
 export class ForgotPasswordComponent {
+  currentStep = signal<'email' | 'otp' | 'password' | 'success'>('email');
   email = '';
-  emailSent = signal(false);
+  otpCode = ['', '', '', '', '', ''];
+  newPassword = '';
+  confirmPassword = '';
+  showPassword = signal(false);
+  showConfirmPassword = signal(false);
+  isLoading = signal(false);
+  errorMessage = signal('');
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private passwordResetService: PasswordResetService
+  ) {}
 
-  handleSubmit() {
-    console.log('Reset password for:', this.email);
-    // Add your password reset logic here
-    this.emailSent.set(true);
+  // Étape 1: Envoyer l'email
+  handleSendOtp() {
+    if (!this.email) {
+      this.errorMessage.set('Veuillez entrer votre email');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.passwordResetService.sendOtpCode(this.email).subscribe({
+      next: (response) => {
+        console.log('OTP envoyé:', response);
+        this.isLoading.set(false);
+        this.currentStep.set('otp');
+      },
+      error: (error) => {
+        console.error('Erreur:', error);
+        this.isLoading.set(false);
+        this.errorMessage.set(error.error?.message || 'Erreur lors de l\'envoi du code');
+      }
+    });
+  }
+
+  // Étape 2: Vérifier l'OTP
+  handleVerifyOtp() {
+    const otpString = this.otpCode.join('');
+
+    if (otpString.length !== 6) {
+      this.errorMessage.set('Veuillez entrer le code complet');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.passwordResetService.verifyOtp(this.email, otpString).subscribe({
+      next: (response) => {
+        console.log('OTP vérifié:', response);
+        this.isLoading.set(false);
+        this.currentStep.set('password');
+      },
+      error: (error) => {
+        console.error('Erreur:', error);
+        this.isLoading.set(false);
+        this.errorMessage.set(error.error?.message || 'Code invalide ou expiré');
+      }
+    });
+  }
+
+  // Étape 3: Réinitialiser le mot de passe
+  handleResetPassword() {
+    if (this.newPassword !== this.confirmPassword) {
+      this.errorMessage.set('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (this.newPassword.length < 6) {
+      this.errorMessage.set('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    const otpString = this.otpCode.join('');
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.passwordResetService.resetPassword(this.email, otpString, this.newPassword).subscribe({
+      next: (response) => {
+        console.log('Mot de passe réinitialisé:', response);
+        this.isLoading.set(false);
+        this.currentStep.set('success');
+
+        // Rediriger vers la page de connexion après 3 secondes
+        setTimeout(() => {
+          this.router.navigate(['/auth']);
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Erreur:', error);
+        this.isLoading.set(false);
+        this.errorMessage.set(error.error?.message || 'Erreur lors de la réinitialisation');
+      }
+    });
+  }
+
+  // Gestion de l'input OTP
+  onOtpInput(event: any, index: number) {
+    const input = event.target;
+    const value = input.value;
+
+    if (value && index < 5) {
+      const nextInput = input.nextElementSibling;
+      if (nextInput) {
+        (nextInput as HTMLInputElement).focus();
+      }
+    }
+  }
+
+  onOtpKeyDown(event: KeyboardEvent, index: number) {
+    if (event.key === 'Backspace' && !this.otpCode[index] && index > 0) {
+      const prevInput = (event.target as HTMLElement).previousElementSibling;
+      if (prevInput) {
+        (prevInput as HTMLInputElement).focus();
+      }
+    }
+  }
+
+  onOtpPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const pastedData = event.clipboardData?.getData('text') || '';
+    const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+
+    for (let i = 0; i < digits.length; i++) {
+      this.otpCode[i] = digits[i];
+    }
+  }
+
+  resendOtp() {
+    this.handleSendOtp();
   }
 
   goBack() {
-    this.router.navigate(['/auth']);
+    if (this.currentStep() === 'email') {
+      this.router.navigate(['/auth']);
+    } else {
+      this.currentStep.set('email');
+      this.otpCode = ['', '', '', '', '', ''];
+      this.newPassword = '';
+      this.confirmPassword = '';
+      this.errorMessage.set('');
+    }
   }
 }

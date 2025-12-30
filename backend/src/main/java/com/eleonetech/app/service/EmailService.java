@@ -40,46 +40,47 @@ public class EmailService {
     }
 
     private String buildOtpEmailTemplate(String otpCode, String userName) {
+        // IMPORTANT: Le contenu doit commencer sur une NOUVELLE ligne après """
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #E91E63, #F06292); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .header h1 { color: white; margin: 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                    .otp-box { background: white; border: 2px dashed #E91E63; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-                    .otp-code { font-size: 32px; font-weight: bold; color: #E91E63; letter-spacing: 5px; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🌸 Flower & Flower</h1>
-                    </div>
-                    <div class="content">
-                        <h2>Bonjour """ + userName + """,</h2>
-                        <p>Vous avez demandé à réinitialiser votre mot de passe. Voici votre code de vérification :</p>
-                        
-                        <div class="otp-box">
-                            <div class="otp-code">""" + otpCode + """</div>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #E91E63, #F06292); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .header h1 { color: white; margin: 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .otp-box { background: white; border: 2px dashed #E91E63; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+                        .otp-code { font-size: 32px; font-weight: bold; color: #E91E63; letter-spacing: 5px; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🌸 Flower & Flower</h1>
                         </div>
-                        
-                        <p><strong>Ce code est valable pendant 5 minutes.</strong></p>
-                        <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
-                        
-                        <div class="footer">
-                            <p>Ceci est un email automatique, merci de ne pas y répondre.</p>
-                            <p>&copy; 2024 Flower & Flower - L'art de la décoration florale</p>
+                        <div class="content">
+                            <h2>Bonjour %s,</h2>
+                            <p>Vous avez demandé à réinitialiser votre mot de passe. Voici votre code de vérification :</p>
+                            
+                            <div class="otp-box">
+                                <div class="otp-code">%s</div>
+                            </div>
+                            
+                            <p><strong>Ce code est valable pendant 5 minutes.</strong></p>
+                            <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
+                            
+                            <div class="footer">
+                                <p>Ceci est un email automatique, merci de ne pas y répondre.</p>
+                                <p>&copy; 2024 Flower & Flower - L'art de la décoration florale</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """.formatted(userName, otpCode);
     }
 }
