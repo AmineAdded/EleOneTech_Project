@@ -13,7 +13,7 @@ import { ArticlesTableComponent } from '../../components/articles-table/articles
   imports: [CommonModule, FormsModule, DashboardNavbarComponent, ArticlesTableComponent],
   template: `
     <div class="dashboard-container">
-      <app-dashboard-navbar></app-dashboard-navbar>
+      <app-dashboard-navbar (profileClick)="showProfileModal.set(true)"></app-dashboard-navbar>
 
       <div class="dashboard-content">
         <app-articles-table></app-articles-table>

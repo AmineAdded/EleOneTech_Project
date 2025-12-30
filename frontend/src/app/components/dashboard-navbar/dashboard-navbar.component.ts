@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal,EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService, AuthResponse } from '../../services/auth.service';
@@ -250,6 +250,7 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
 export class DashboardNavbarComponent implements OnInit {
   activeMenu = signal<'articles' | 'process' | 'clients'>('articles');
   currentUser: AuthResponse | null = null;
+  @Output() profileClick = new EventEmitter<void>();
 
   constructor(
     private authService: AuthService,
@@ -268,8 +269,8 @@ export class DashboardNavbarComponent implements OnInit {
   }
 
   openProfile() {
-    // Ouvrir le modal de profil
-  }
+  this.profileClick.emit(); // 🔥 déclenche l’événement vers le parent
+}
 
   logout() {
     this.authService.logout();
