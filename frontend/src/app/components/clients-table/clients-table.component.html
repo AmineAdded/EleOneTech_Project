@@ -6,7 +6,7 @@
       <input
         type="text"
         class="search-input"
-        placeholder="Rechercher (Nom, Adresse, Devise...)"
+        placeholder="Rechercher (Ref, Nom, Adresse, Devise...)"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event)"
       />
@@ -35,8 +35,8 @@
   <div class="table-wrapper">
     <!-- Clients en grille -->
     <div class="clients-grid">
-      <div 
-        *ngFor="let client of filteredClients(); let i = index" 
+      <div
+        *ngFor="let client of filteredClients(); let i = index"
         class="client-block"
         [class.editing-block]="isEditing(client)"
       >
@@ -44,6 +44,7 @@
         <table class="client-main-table">
           <thead>
             <tr>
+              <th>Ref</th>
               <th>Nom Complet</th>
               <th>Devise</th>
               <th>Mode de Transport</th>
@@ -55,6 +56,16 @@
           </thead>
           <tbody>
             <tr>
+              <!-- Ref -->
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="client.ref"
+                  [disabled]="!isEditing(client)"
+                  class="table-input"
+                  placeholder="Référence">
+              </td>
+
               <!-- Nom Complet -->
               <td>
                 <input
@@ -163,9 +174,9 @@
                     </svg>
                   </button>
 
-                  <button 
-                    class="delete-btn" 
-                    (click)="deleteRow(i)" 
+                  <button
+                    class="delete-btn"
+                    (click)="deleteRow(i)"
                     title="Supprimer"
                     [disabled]="isLoading()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">

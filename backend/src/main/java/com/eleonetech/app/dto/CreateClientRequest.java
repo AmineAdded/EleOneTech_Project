@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// DTO pour créer un client
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CreateClientRequest {
+    @NotBlank(message = "La référence du client est obligatoire")
+    private String ref;
+
     @NotBlank(message = "Le nom complet du client est obligatoire")
     private String nomComplet;
 

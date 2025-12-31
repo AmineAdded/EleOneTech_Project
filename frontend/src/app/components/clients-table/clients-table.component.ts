@@ -10,8 +10,7 @@ import {
 } from '../../services/client.service';
 
 /**
- * 👉 Type FRONTEND (UI)
- * On étend la réponse backend avec des champs d'interface
+ * Type FRONTEND (UI)
  */
 interface ClientTable extends ClientResponse {
   isEditing?: boolean;
@@ -27,7 +26,6 @@ interface ClientTable extends ClientResponse {
 })
 export class ClientsTableComponent implements OnInit {
 
-  // ✅ Utilisation du type ClientTable
   clients = signal<ClientTable[]>([]);
   searchTerm = signal('');
   isLoading = signal(false);
@@ -53,7 +51,6 @@ export class ClientsTableComponent implements OnInit {
     this.isLoading.set(true);
     this.clientService.getAllClients().subscribe({
       next: (clients) => {
-        // Ajout des champs UI par défaut
         const mapped: ClientTable[] = clients.map(c => ({
           ...c,
           isEditing: false,
@@ -78,6 +75,7 @@ export class ClientsTableComponent implements OnInit {
     if (!term) return this.clients();
 
     return this.clients().filter(c =>
+      c.ref?.toLowerCase().includes(term) ||
       c.nomComplet?.toLowerCase().includes(term) ||
       c.adresseLivraison?.toLowerCase().includes(term) ||
       c.adresseFacturation?.toLowerCase().includes(term) ||
@@ -93,6 +91,7 @@ export class ClientsTableComponent implements OnInit {
   addNewRow() {
     const newClient: ClientTable = {
       id: 0 as any,
+      ref: '',
       nomComplet: '',
       adresseLivraison: '',
       adresseFacturation: '',
@@ -133,6 +132,11 @@ export class ClientsTableComponent implements OnInit {
   saveRow(index: number) {
     const client = this.clients()[index];
 
+    if (!client.ref?.trim()) {
+      this.errorMessage.set('La référence est obligatoire');
+      return;
+    }
+
     if (!client.nomComplet?.trim()) {
       this.errorMessage.set('Le nom complet est obligatoire');
       return;
@@ -143,6 +147,7 @@ export class ClientsTableComponent implements OnInit {
     // ---------- CREATE ----------
     if (client.isNew) {
       const request: CreateClientRequest = {
+        ref: client.ref,
         nomComplet: client.nomComplet,
         adresseLivraison: client.adresseLivraison,
         adresseFacturation: client.adresseFacturation,
@@ -158,7 +163,7 @@ export class ClientsTableComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.errorMessage.set('Erreur lors de la création');
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
           this.isLoading.set(false);
         }
       });
@@ -166,6 +171,7 @@ export class ClientsTableComponent implements OnInit {
     // ---------- UPDATE ----------
     } else {
       const request: UpdateClientRequest = {
+        ref: client.ref,
         nomComplet: client.nomComplet,
         adresseLivraison: client.adresseLivraison,
         adresseFacturation: client.adresseFacturation,
@@ -191,7 +197,7 @@ export class ClientsTableComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.errorMessage.set('Erreur lors de la mise à jour');
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
           this.isLoading.set(false);
         }
       });
@@ -232,7 +238,7 @@ export class ClientsTableComponent implements OnInit {
       return;
     }
 
-    if (!confirm(`Supprimer le client "${client.nomComplet}" ?`)) return;
+    if (!confirm(`Supprimer le client "${client.nomComplet}" (Ref: ${client.ref}) ?`)) return;
 
     this.isLoading.set(true);
     this.clientService.deleteClient(client.id).subscribe({

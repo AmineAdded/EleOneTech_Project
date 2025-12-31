@@ -25,12 +25,18 @@ public class ClientService {
 
     @Transactional
     public ClientResponse createClient(CreateClientRequest request) {
-        // Vérifier si le client existe déjà
+        // Vérifier si la référence existe déjà
+        if (clientRepository.existsByRef(request.getRef())) {
+            throw new RuntimeException("Un client avec cette référence existe déjà");
+        }
+
+        // Vérifier si le nom existe déjà
         if (clientRepository.existsByNomComplet(request.getNomComplet())) {
             throw new RuntimeException("Un client avec ce nom existe déjà");
         }
 
         Client client = Client.builder()
+                .ref(request.getRef())
                 .nomComplet(request.getNomComplet())
                 .adresseLivraison(request.getAdresseLivraison())
                 .adresseFacturation(request.getAdresseFacturation())
@@ -41,20 +47,20 @@ public class ClientService {
                 .build();
 
         client = clientRepository.save(client);
-        log.info("Client créé: {}", client.getNomComplet());
+        log.info("Client créé: {} (Ref: {})", client.getNomComplet(), client.getRef());
 
         return mapToResponse(client);
     }
 
     public List<ClientResponse> getAllClients() {
-        return clientRepository.findAllActiveOrderByNomComplet()
+        return clientRepository.findAllActiveOrderByRef()
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     public List<ClientSimpleResponse> getAllClientsSimple() {
-        return clientRepository.findAllActiveOrderByNomComplet()
+        return clientRepository.findAllActiveOrderByRef()
                 .stream()
                 .map(client -> ClientSimpleResponse.builder()
                         .id(client.getId())
@@ -74,21 +80,43 @@ public class ClientService {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
 
+        // Vérifier si la nouvelle référence existe déjà (sauf si c'est le même client)
+        if (request.getRef() != null && !client.getRef().equals(request.getRef()) &&
+                clientRepository.existsByRef(request.getRef())) {
+            throw new RuntimeException("Un client avec cette référence existe déjà");
+        }
+
         // Vérifier si le nouveau nom existe déjà (sauf si c'est le même client)
-        if (!client.getNomComplet().equals(request.getNomComplet()) &&
+        if (request.getNomComplet() != null && !client.getNomComplet().equals(request.getNomComplet()) &&
                 clientRepository.existsByNomComplet(request.getNomComplet())) {
             throw new RuntimeException("Un client avec ce nom existe déjà");
         }
 
-        client.setNomComplet(request.getNomComplet());
-        client.setAdresseLivraison(request.getAdresseLivraison());
-        client.setAdresseFacturation(request.getAdresseFacturation());
-        client.setDevise(request.getDevise());
-        client.setModeTransport(request.getModeTransport());
-        client.setIncoTerme(request.getIncoTerme());
+        // Mettre à jour uniquement si les valeurs ne sont pas nulles
+        if (request.getRef() != null) {
+            client.setRef(request.getRef());
+        }
+        if (request.getNomComplet() != null) {
+            client.setNomComplet(request.getNomComplet());
+        }
+        if (request.getAdresseLivraison() != null) {
+            client.setAdresseLivraison(request.getAdresseLivraison());
+        }
+        if (request.getAdresseFacturation() != null) {
+            client.setAdresseFacturation(request.getAdresseFacturation());
+        }
+        if (request.getDevise() != null) {
+            client.setDevise(request.getDevise());
+        }
+        if (request.getModeTransport() != null) {
+            client.setModeTransport(request.getModeTransport());
+        }
+        if (request.getIncoTerme() != null) {
+            client.setIncoTerme(request.getIncoTerme());
+        }
 
         client = clientRepository.save(client);
-        log.info("Client mis à jour: {}", client.getNomComplet());
+        log.info("Client mis à jour: {} (Ref: {})", client.getNomComplet(), client.getRef());
 
         return mapToResponse(client);
     }
@@ -98,14 +126,14 @@ public class ClientService {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client non trouvé"));
 
-        client.setIsActive(false);
         clientRepository.deleteById(id);
-        log.info("Client désactivé: {}", client.getNomComplet());
+        log.info("Client supprimé: {} (Ref: {})", client.getNomComplet(), client.getRef());
     }
 
     private ClientResponse mapToResponse(Client client) {
         return ClientResponse.builder()
                 .id(client.getId())
+                .ref(client.getRef())
                 .nomComplet(client.getNomComplet())
                 .adresseLivraison(client.getAdresseLivraison())
                 .adresseFacturation(client.getAdresseFacturation())

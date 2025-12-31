@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ClientResponse {
     private Long id;
+    private String ref;
     private String nomComplet;
     private String adresseLivraison;
     private String adresseFacturation;

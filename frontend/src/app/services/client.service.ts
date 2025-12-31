@@ -4,34 +4,34 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface CreateClientRequest {
+  ref: string;
   nomComplet: string;
   adresseLivraison?: string;
   adresseFacturation?: string;
   devise?: string;
   modeTransport?: string;
   incoTerme?: string;
-  notes?: string;
 }
 
 export interface UpdateClientRequest {
+  ref: string;
   nomComplet: string;
   adresseLivraison?: string;
   adresseFacturation?: string;
   devise?: string;
   modeTransport?: string;
   incoTerme?: string;
-  notes?: string;
 }
 
 export interface ClientResponse {
   id: number;
+  ref: string;
   nomComplet: string;
   adresseLivraison?: string;
   adresseFacturation?: string;
   devise?: string;
   modeTransport?: string;
   incoTerme?: string;
-  notes?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

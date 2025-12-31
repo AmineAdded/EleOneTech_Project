@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateClientRequest {
+    @NotBlank(message = "La référence du client est obligatoire")
+    private String ref;
+
     @NotBlank(message = "Le nom complet du client est obligatoire")
     private String nomComplet;
 

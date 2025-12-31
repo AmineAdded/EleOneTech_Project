@@ -10,10 +10,12 @@ import java.util.Optional;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
+    Optional<Client> findByRef(String ref);
     Optional<Client> findByNomComplet(String nomComplet);
+    Boolean existsByRef(String ref);
     Boolean existsByNomComplet(String nomComplet);
     List<Client> findByIsActiveTrue();
 
-    @Query("SELECT c FROM Client c WHERE c.isActive = true ORDER BY c.nomComplet ASC")
-    List<Client> findAllActiveOrderByNomComplet();
+    @Query("SELECT c FROM Client c WHERE c.isActive = true ORDER BY c.ref ASC")
+    List<Client> findAllActiveOrderByRef();
 }
