@@ -1,10 +1,11 @@
-// frontend/src/app/components/articles-table/articles-table.component.ts (MIS À JOUR)
+// frontend/src/app/components/articles-table/articles-table.component.ts
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProcessManagerComponent, ProcessDetail } from '../process-manager/process-manager.component';
 import { ClientsManagerComponent } from '../clients-manager/clients-manager.component';
 import { ClientService } from '../../services/client.service';
+import { ArticleService, ArticleResponse, CreateArticleRequest, UpdateArticleRequest } from '../../services/article.service';
 
 interface Article {
   id?: number;
@@ -19,6 +20,7 @@ interface Article {
   processes: ProcessDetail[];
   clients: string[];
   isEditing?: boolean;
+  isNew?: boolean;
 }
 
 @Component({
@@ -32,27 +34,64 @@ export class ArticlesTableComponent implements OnInit {
   articles = signal<Article[]>([]);
   availableClients = signal<string[]>([]);
   searchTerm = '';
+  isLoading = signal(false);
+  errorMessage = signal('');
 
   private originalArticles: { [key: number]: Article } = {};
+  private editingArticles: Set<number> = new Set();
 
-  constructor(private clientService: ClientService) {}
+  constructor(
+    private clientService: ClientService,
+    private articleService: ArticleService
+  ) {}
 
   ngOnInit() {
     this.loadClients();
+    this.loadArticles();
   }
 
   loadClients() {
     this.clientService.getAllClientsSimple().subscribe({
       next: (clients) => {
-        // Tri alphabétique des clients
         const sortedClients = clients
           .map(c => c.nomComplet)
           .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
-        
+
         this.availableClients.set(sortedClients);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des clients:', error);
+        this.errorMessage.set('Erreur lors du chargement des clients');
+      }
+    });
+  }
+
+  loadArticles() {
+    this.isLoading.set(true);
+    this.articleService.getAllArticles().subscribe({
+      next: (articles) => {
+        const mapped: Article[] = articles.map(a => ({
+          id: a.id,
+          ref: a.ref,
+          article: a.article,
+          famille: a.famille || '',
+          sousFamille: a.sousFamille || '',
+          typeProcess: a.typeProcess || '',
+          typeProduit: a.typeProduit || '',
+          prixUnitaire: a.prixUnitaire || 0,
+          mpq: a.mpq || 0,
+          processes: a.processes || [],
+          clients: a.clients || [],
+          isEditing: false,
+          isNew: false
+        }));
+        this.articles.set(mapped);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des articles:', error);
+        this.errorMessage.set('Erreur lors du chargement des articles');
+        this.isLoading.set(false);
       }
     });
   }
@@ -84,15 +123,20 @@ export class ArticlesTableComponent implements OnInit {
       mpq: 0,
       processes: [],
       clients: [],
-      isEditing: true
+      isEditing: true,
+      isNew: true
     };
 
     this.articles.update(articles => [newArticle, ...articles]);
   }
 
   editRow(index: number) {
-    const currentArticles = this.articles();
-    this.originalArticles[index] = JSON.parse(JSON.stringify(currentArticles[index]));
+    const article = this.articles()[index];
+
+    if (!article.isNew && article.id) {
+      this.originalArticles[article.id] = JSON.parse(JSON.stringify(article));
+      this.editingArticles.add(article.id);
+    }
 
     this.articles.update(articles => {
       const updated = [...articles];
@@ -102,34 +146,133 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   saveRow(index: number) {
-    this.articles.update(articles => {
-      const updated = [...articles];
-      updated[index] = { ...updated[index], isEditing: false };
-      return updated;
-    });
+    const article = this.articles()[index];
 
-    delete this.originalArticles[index];
-    console.log('Article sauvegardé:', this.articles()[index]);
+    if (!article.ref?.trim()) {
+      this.errorMessage.set('La référence est obligatoire');
+      return;
+    }
+
+    if (!article.article?.trim()) {
+      this.errorMessage.set('Le nom de l\'article est obligatoire');
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    if (article.isNew) {
+      // CREATE
+      const request: CreateArticleRequest = {
+        ref: article.ref,
+        article: article.article,
+        famille: article.famille || '',
+        sousFamille: article.sousFamille || '',
+        typeProcess: article.typeProcess || '',
+        typeProduit: article.typeProduit || '',
+        prixUnitaire: article.prixUnitaire || 0,
+        mpq: article.mpq || 0,
+        clients: article.clients || [],
+        processes: article.processes || []
+      };
+
+      this.articleService.createArticle(request).subscribe({
+        next: () => {
+          this.loadArticles();
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
+          this.isLoading.set(false);
+        }
+      });
+
+    } else if (article.id) {
+      // UPDATE
+      const request: UpdateArticleRequest = {
+        ref: article.ref,
+        article: article.article,
+        famille: article.famille || '',
+        sousFamille: article.sousFamille || '',
+        typeProcess: article.typeProcess || '',
+        typeProduit: article.typeProduit || '',
+        prixUnitaire: article.prixUnitaire || 0,
+        mpq: article.mpq || 0,
+        clients: article.clients || [],
+        processes: article.processes || []
+      };
+
+      this.articleService.updateArticle(article.id, request).subscribe({
+        next: (response) => {
+          this.articles.update(articles => {
+            const updated = [...articles];
+            updated[index] = {
+              ...response,
+              isEditing: false,
+              isNew: false
+            };
+            return updated;
+          });
+          delete this.originalArticles[article.id!];
+          this.editingArticles.delete(article.id!);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
+          this.isLoading.set(false);
+        }
+      });
+    }
   }
 
   cancelEdit(index: number) {
-    if (this.originalArticles[index]) {
-      this.articles.update(articles => {
-        const updated = [...articles];
-        updated[index] = { ...this.originalArticles[index], isEditing: false };
-        return updated;
-      });
-      delete this.originalArticles[index];
-    } else {
+    const article = this.articles()[index];
+
+    if (article.isNew) {
       this.articles.update(articles => articles.filter((_, i) => i !== index));
+      return;
+    }
+
+    if (article.id) {
+      const original = this.originalArticles[article.id];
+      if (original) {
+        this.articles.update(articles => {
+          const updated = [...articles];
+          updated[index] = { ...original, isEditing: false };
+          return updated;
+        });
+        delete this.originalArticles[article.id];
+        this.editingArticles.delete(article.id);
+      }
     }
   }
 
   deleteRow(index: number) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
+    const article = this.articles()[index];
+
+    if (article.isNew) {
       this.articles.update(articles => articles.filter((_, i) => i !== index));
-      delete this.originalArticles[index];
+      return;
     }
+
+    if (!article.id) return;
+
+    if (!confirm(`Supprimer l'article "${article.article}" (Ref: ${article.ref}) ?`)) return;
+
+    this.isLoading.set(true);
+    this.articleService.deleteArticle(article.id).subscribe({
+      next: () => {
+        this.loadArticles();
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMessage.set('Erreur lors de la suppression');
+        this.isLoading.set(false);
+      }
+    });
   }
 
   updateClients(articleIndex: number, clients: string[]) {

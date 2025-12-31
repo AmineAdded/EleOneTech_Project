@@ -1,0 +1,87 @@
+// frontend/src/app/services/article.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface ProcessDetail {
+  id: string;
+  name: string;
+  tempsParPF: number;
+  cadenceMax: number;
+}
+
+export interface CreateArticleRequest {
+  ref: string;
+  article: string;
+  famille: string;
+  sousFamille: string;
+  typeProcess: string;
+  typeProduit: string;
+  prixUnitaire: number;
+  mpq: number;
+  clients: string[];
+  processes: ProcessDetail[];
+}
+
+export interface UpdateArticleRequest {
+  ref: string;
+  article: string;
+  famille: string;
+  sousFamille: string;
+  typeProcess: string;
+  typeProduit: string;
+  prixUnitaire: number;
+  mpq: number;
+  clients: string[];
+  processes: ProcessDetail[];
+}
+
+export interface ArticleResponse {
+  id: number;
+  ref: string;
+  article: string;
+  famille: string;
+  sousFamille: string;
+  typeProcess: string;
+  typeProduit: string;
+  prixUnitaire: number;
+  mpq: number;
+  clients: string[];
+  processes: ProcessDetail[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ArticleService {
+  private apiUrl = 'http://localhost:8080/api/articles';
+
+  constructor(private http: HttpClient) {}
+
+  createArticle(article: CreateArticleRequest): Observable<ArticleResponse> {
+    return this.http.post<ArticleResponse>(this.apiUrl, article);
+  }
+
+  getAllArticles(): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(this.apiUrl);
+  }
+
+  getArticleById(id: number): Observable<ArticleResponse> {
+    return this.http.get<ArticleResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  updateArticle(id: number, article: UpdateArticleRequest): Observable<ArticleResponse> {
+    return this.http.put<ArticleResponse>(`${this.apiUrl}/${id}`, article);
+  }
+
+  deleteArticle(id: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
+  }
+}
