@@ -30,11 +30,17 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
             "WHERE a IN :articles")
     List<Article> findArticlesWithProcesses(@Param("articles") List<Article> articles);
 
+    // ✅ FIX: Charger les clients d'abord
     @Query("SELECT a FROM Article a " +
             "LEFT JOIN FETCH a.articleClients ac " +
             "LEFT JOIN FETCH ac.client " +
+            "WHERE a.id = :id")
+    Optional<Article> findByIdWithClients(@Param("id") Long id);
+
+    // ✅ FIX: Charger les processes ensuite
+    @Query("SELECT a FROM Article a " +
             "LEFT JOIN FETCH a.articleProcesses ap " +
             "LEFT JOIN FETCH ap.process " +
             "WHERE a.id = :id")
-    Optional<Article> findByIdWithRelations(Long id);
+    Optional<Article> findByIdWithProcesses(@Param("id") Long id);
 }

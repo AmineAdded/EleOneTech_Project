@@ -108,15 +108,24 @@ public class ArticleService {
     }
 
     public ArticleResponse getArticleById(Long id) {
-        Article article = articleRepository.findByIdWithRelations(id)
+        // ✅ Charger en deux étapes
+        Article article = articleRepository.findByIdWithClients(id)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        // Charger les processes
+        articleRepository.findByIdWithProcesses(id);
+
         return mapToResponse(article);
     }
 
     @Transactional
     public ArticleResponse updateArticle(Long id, UpdateArticleRequest request) {
-        Article article = articleRepository.findByIdWithRelations(id)
+        // ✅ Charger en deux étapes
+        Article article = articleRepository.findByIdWithClients(id)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        // Charger les processes
+        articleRepository.findByIdWithProcesses(id);
 
         // Vérifier si la nouvelle référence existe déjà (sauf si c'est le même article)
         if (!article.getRef().equals(request.getRef()) &&
