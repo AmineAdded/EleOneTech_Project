@@ -127,6 +127,39 @@
   min-width: 180px;
 }
 
+/* Cellule Type de Process */
+.type-process-cell {
+  min-width: 180px;
+}
+
+.type-process-select {
+  min-width: 170px;
+  white-space: normal;
+}
+
+/* Cellule Date de création */
+.date-cell {
+  min-width: 140px;
+  text-align: center;
+}
+
+.date-display {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  color: #1976D2;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.date-display.new-article {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  color: #388E3C;
+  font-weight: 600;
+}
+
 .table-input,
 .table-select {
   width: 100%;

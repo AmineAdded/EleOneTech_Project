@@ -23,8 +23,8 @@
   <div class="table-wrapper">
     <!-- Articles en grille -->
     <div class="articles-grid">
-      <div 
-        *ngFor="let article of filteredArticles(); let i = index" 
+      <div
+        *ngFor="let article of filteredArticles(); let i = index"
         class="article-block"
         [class.editing-block]="article.isEditing"
       >
@@ -41,6 +41,7 @@
               <th>Prix Unitaire</th>
               <th>MPQ</th>
               <th>Clients</th>
+              <th>Date de création</th>
             </tr>
           </thead>
           <tbody>
@@ -86,11 +87,11 @@
               </td>
 
               <!-- Type Process -->
-              <td>
+              <td class="type-process-cell">
                 <select
                   [(ngModel)]="article.typeProcess"
                   [disabled]="!article.isEditing"
-                  class="table-select">
+                  class="table-select type-process-select">
                   <option value="">Sélectionner</option>
                   <option value="Seulement Annexe">Seulement Annexe</option>
                   <option value="Seulement Usine">Seulement Usine</option>
@@ -139,6 +140,16 @@
                     [availableClientsList]="availableClients()"
                     (clientsChange)="updateClients(i, $event)">
                   </app-clients-manager>
+              </td>
+
+              <!-- Date de création -->
+              <td class="date-cell">
+                <span class="date-display" *ngIf="!article.isNew">
+                  {{ formatDate(article.createdAt) }}
+                </span>
+                <span class="date-display new-article" *ngIf="article.isNew">
+                  Nouveau
+                </span>
               </td>
             </tr>
           </tbody>
@@ -222,9 +233,9 @@
                 </svg>
               </button>
 
-              <button 
-                class="delete-btn" 
-                (click)="deleteRow(i)" 
+              <button
+                class="delete-btn"
+                (click)="deleteRow(i)"
                 title="Supprimer">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <polyline points="3 6 5 6 21 6"/>
@@ -249,6 +260,8 @@
       <div *ngIf="articles().length === 0" class="empty-state">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
         </svg>
         <p>Aucun article. Cliquez sur "Ajouter un article" pour commencer.</p>
       </div>

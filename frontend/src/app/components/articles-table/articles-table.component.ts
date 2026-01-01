@@ -19,6 +19,7 @@ interface Article {
   mpq: number;
   processes: ProcessDetail[];
   clients: string[];
+  createdAt?: string;
   isEditing?: boolean;
   isNew?: boolean;
 }
@@ -82,6 +83,7 @@ export class ArticlesTableComponent implements OnInit {
           mpq: a.mpq || 0,
           processes: a.processes || [],
           clients: a.clients || [],
+          createdAt: a.createdAt,
           isEditing: false,
           isNew: false
         }));
@@ -110,6 +112,29 @@ export class ArticlesTableComponent implements OnInit {
       article.clients.some(c => c.toLowerCase().includes(term))
     );
   });
+
+  /**
+   * Formate la date au format français DD/MM/YYYY HH:mm
+   */
+  formatDate(dateString: string | undefined): string {
+    if (!dateString) return '-';
+
+    try {
+      // Le format backend est "yyyy-MM-dd HH:mm:ss"
+      const date = new Date(dateString);
+
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Erreur lors du formatage de la date:', error);
+      return '-';
+    }
+  }
 
   addNewRow() {
     const newArticle: Article = {
