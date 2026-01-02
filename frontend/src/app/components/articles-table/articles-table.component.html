@@ -6,8 +6,9 @@
       <input
         type="text"
         class="search-input"
-        placeholder="Rechercher (Ref, Article, Famille, Type produit...)"
-        [(ngModel)]="searchTerm"
+        placeholder="Rechercher (Ref, Article, Famille, Stock...)"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
       />
       <button class="add-btn" (click)="addNewRow()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -40,6 +41,7 @@
               <th>Type de Produit</th>
               <th>Prix Unitaire</th>
               <th>MPQ</th>
+              <th>Stock</th>
               <th>Clients</th>
               <th>Date de création</th>
             </tr>
@@ -132,6 +134,17 @@
                   placeholder="0">
               </td>
 
+              <!-- ✅ Stock (NON MODIFIABLE) -->
+              <td class="stock-cell">
+                <span 
+                  class="stock-badge"
+                  [class.stock-high]="article.stock > 100"
+                  [class.stock-medium]="article.stock > 50 && article.stock <= 100"
+                  [class.stock-low]="article.stock <= 50">
+                  {{ article.stock }}
+                </span>
+              </td>
+
               <!-- Clients -->
               <td class="clients-cell">
                 <app-clients-manager
@@ -180,6 +193,24 @@
                         <td class="process-name">{{ process.name }}</td>
                         <td class="process-value">{{ process.tempsParPF }}</td>
                         <td class="process-value">{{ process.cadenceMax }}</td>
+                      </tr>
+                      <!-- ✅ LIGNE TOTAUX -->
+                      <tr class="process-total-row">
+                        <td class="process-total-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 3h18v18H3zM12 8v8m-4-4h8"/>
+                          </svg>
+                          Total
+                        </td>
+                        <td class="process-total-value">
+                          {{ calculateTotalTime(article.processes).toFixed(2) }} s
+                        </td>
+                        <td class="process-total-value">
+                          <span *ngIf="calculateBottleneck(article.processes)" class="bottleneck">
+                            🔴 {{ calculateBottleneck(article.processes) }}
+                          </span>
+                          <span *ngIf="!calculateBottleneck(article.processes)">-</span>
+                        </td>
                       </tr>
                     </tbody>
                   </table>

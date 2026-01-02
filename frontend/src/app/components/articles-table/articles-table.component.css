@@ -67,22 +67,21 @@
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
-  overflow-x: auto; /* ✅ Scroll horizontal pour la table-wrapper */
+  overflow-x: auto;
 }
 
-/* Grille d'articles */
 .articles-grid {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  min-width: 1900px; /* ✅ Largeur suffisante pour toutes les colonnes */
+  min-width: 2000px;
 }
 
 .article-block {
   background: white;
   border: 3px solid #E0E0E0;
   border-radius: 12px;
-  overflow: visible; /* ✅ Changé de hidden à visible */
+  overflow: visible;
   transition: all 0.3s ease;
 }
 
@@ -96,12 +95,11 @@
   background: #E3F2FD;
 }
 
-/* Table principale */
 .article-main-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
-  table-layout: fixed; /* ✅ Gardé en fixed pour contrôler les largeurs */
+  table-layout: fixed;
 }
 
 .article-main-table thead {
@@ -123,63 +121,76 @@
 
 .article-main-table td {
   padding: 0.75rem 1rem;
-  vertical-align: top; /* ✅ Changé de middle à top pour un meilleur alignement multi-lignes */
-  word-wrap: break-word; /* ✅ Permettre la coupure des mots longs */
-  overflow-wrap: break-word; /* ✅ Alternative pour la coupure */
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* ✅ Largeurs fixes optimisées pour chaque colonne */
+/* Largeurs colonnes */
 .article-main-table th:nth-child(1),
-.article-main-table td:nth-child(1) {
-  width: 100px; /* Ref */
-}
+.article-main-table td:nth-child(1) { width: 100px; }
 
 .article-main-table th:nth-child(2),
-.article-main-table td:nth-child(2) {
-  width: 200px; /* Article */
-}
+.article-main-table td:nth-child(2) { width: 200px; }
 
 .article-main-table th:nth-child(3),
-.article-main-table td:nth-child(3) {
-  width: 150px; /* Famille */
-}
+.article-main-table td:nth-child(3) { width: 150px; }
 
 .article-main-table th:nth-child(4),
-.article-main-table td:nth-child(4) {
-  width: 160px; /* Sous Famille */
-}
+.article-main-table td:nth-child(4) { width: 160px; }
 
 .article-main-table th:nth-child(5),
-.article-main-table td:nth-child(5) {
-  width: 180px; /* Type de Process */
-}
+.article-main-table td:nth-child(5) { width: 180px; }
 
 .article-main-table th:nth-child(6),
-.article-main-table td:nth-child(6) {
-  width: 140px; /* Type de Produit */
-}
+.article-main-table td:nth-child(6) { width: 140px; }
 
 .article-main-table th:nth-child(7),
-.article-main-table td:nth-child(7) {
-  width: 120px; /* Prix Unitaire */
-}
+.article-main-table td:nth-child(7) { width: 120px; }
 
 .article-main-table th:nth-child(8),
-.article-main-table td:nth-child(8) {
-  width: 80px; /* MPQ */
-}
+.article-main-table td:nth-child(8) { width: 80px; }
 
+/* ✅ Stock Column */
 .article-main-table th:nth-child(9),
-.article-main-table td:nth-child(9) {
-  width: 220px; /* Clients */
-}
+.article-main-table td:nth-child(9) { width: 100px; }
 
 .article-main-table th:nth-child(10),
-.article-main-table td:nth-child(10) {
-  width: 170px; /* Date de création */
+.article-main-table td:nth-child(10) { width: 220px; }
+
+.article-main-table th:nth-child(11),
+.article-main-table td:nth-child(11) { width: 170px; }
+
+/* ✅ Stock Cell */
+.stock-cell {
+  text-align: center;
 }
 
-/* Cellule Clients avec scroll horizontal si nécessaire */
+.stock-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 50px;
+  text-align: center;
+}
+
+.stock-badge.stock-high {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  color: #388E3C;
+}
+
+.stock-badge.stock-medium {
+  background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+  color: #F57C00;
+}
+
+.stock-badge.stock-low {
+  background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+  color: #C62828;
+}
+
 .clients-cell {
   max-width: 100%;
   overflow-x: auto;
@@ -200,27 +211,15 @@
   border-radius: 3px;
 }
 
-.clients-cell::-webkit-scrollbar-thumb:hover {
-  background: #7B1FA2;
-}
-
-/* ✅ Cellule Type de Process - permettre le retour à la ligne */
 .type-process-cell {
   white-space: normal !important;
   word-wrap: break-word;
   line-height: 1.5;
 }
 
-.type-process-select {
-  white-space: normal;
-  height: auto;
-  min-height: 38px;
-}
-
-/* Cellule Date de création */
 .date-cell {
   text-align: center;
-  white-space: nowrap; /* ✅ Empêcher la coupure de la date */
+  white-space: nowrap;
 }
 
 .date-display {
@@ -250,10 +249,10 @@
   transition: all 0.3s ease;
   background: white;
   box-sizing: border-box;
-  white-space: normal; /* ✅ Permettre le retour à la ligne */
+  white-space: normal;
   word-wrap: break-word;
   min-height: 38px;
-  height: auto; /* ✅ Hauteur automatique */
+  height: auto;
 }
 
 .table-input:focus,
@@ -268,16 +267,16 @@
   background: transparent;
   border-color: transparent;
   cursor: default;
-  white-space: normal; /* ✅ Afficher le texte complet */
+  white-space: normal;
   overflow: visible;
-  padding: 0; /* ✅ Retirer le padding en mode désactivé pour un meilleur affichage */
+  padding: 0;
 }
 
 .table-input[type="number"] {
   text-align: right;
 }
 
-/* Footer: Process et Actions */
+/* Process Section */
 .article-footer {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -306,7 +305,6 @@
   border-bottom: 2px solid #E0E0E0;
 }
 
-/* Table des process en mode affichage */
 .process-display-table {
   min-height: 100px;
 }
@@ -319,7 +317,7 @@
 }
 
 .process-scroll {
-  max-height: 200px;
+  max-height: 280px;
   overflow-y: auto;
   border: 1.5px solid #E0E0E0;
   border-radius: 6px;
@@ -350,10 +348,6 @@
   border-bottom: 1px solid #E0E0E0;
 }
 
-.process-table tbody tr:last-child {
-  border-bottom: none;
-}
-
 .process-table tbody tr:hover {
   background: #F5F5F5;
 }
@@ -372,7 +366,37 @@
   color: #666;
 }
 
-/* Boutons d'action */
+/* ✅ LIGNE TOTAUX */
+.process-total-row {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9) !important;
+  font-weight: 600;
+  border-top: 2px solid #4CAF50 !important;
+  position: sticky;
+  bottom: 0;
+}
+
+.process-total-label {
+  color: #2E7D32 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.process-total-value {
+  color: #2E7D32 !important;
+  font-weight: 700;
+}
+
+.bottleneck {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+/* Action Buttons */
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -439,7 +463,7 @@
   box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
 }
 
-/* Empty state */
+/* Empty State */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;

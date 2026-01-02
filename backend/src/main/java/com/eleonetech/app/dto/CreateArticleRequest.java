@@ -27,6 +27,9 @@ public class CreateArticleRequest {
     private Double prixUnitaire;
     private Integer mpq;
 
+    // ✅ NOUVEAU: Stock (optionnel, par défaut 0)
+    private Integer stock;
+
     @Builder.Default
     private List<String> clients = new ArrayList<>();
 

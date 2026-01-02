@@ -19,6 +19,7 @@ export interface CreateArticleRequest {
   typeProduit: string;
   prixUnitaire: number;
   mpq: number;
+  stock: number;
   clients: string[];
   processes: ProcessDetail[];
 }
@@ -32,6 +33,7 @@ export interface UpdateArticleRequest {
   typeProduit: string;
   prixUnitaire: number;
   mpq: number;
+  stock: number;
   clients: string[];
   processes: ProcessDetail[];
 }
@@ -46,6 +48,7 @@ export interface ArticleResponse {
   typeProduit: string;
   prixUnitaire: number;
   mpq: number;
+  stock: number;
   clients: string[];
   processes: ProcessDetail[];
   isActive: boolean;

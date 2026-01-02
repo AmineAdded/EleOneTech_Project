@@ -38,16 +38,21 @@ public class Article {
     private String sousFamille;
 
     @Column(name = "type_process", length = 50)
-    private String typeProcess; // "Seulement Annexe", "Seulement Usine", "Annexe + Usine"
+    private String typeProcess;
 
     @Column(name = "type_produit", length = 50)
-    private String typeProduit; // "Simple", "Composé"
+    private String typeProduit;
 
     @Column(name = "prix_unitaire")
     private Double prixUnitaire;
 
     @Column(name = "mpq")
-    private Integer mpq; // Minimum Package Quantity
+    private Integer mpq;
+
+    // ✅ NOUVEAU: Colonne Stock
+    @Column(name = "stock")
+    @Builder.Default
+    private Integer stock = 0;
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -78,7 +83,6 @@ public class Article {
         updatedAt = LocalDateTime.now();
     }
 
-    // Méthodes helper pour gérer les relations bidirectionnelles
     public void addClient(Client client) {
         ArticleClient articleClient = new ArticleClient();
         articleClient.setArticle(this);

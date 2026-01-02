@@ -53,6 +53,7 @@ public class ArticleService {
                 .typeProduit(request.getTypeProduit())
                 .prixUnitaire(request.getPrixUnitaire())
                 .mpq(request.getMpq())
+                .stock(request.getStock() != null ? request.getStock() : 0)
                 .isActive(true)
                 .articleClients(new ArrayList<>())
                 .articleProcesses(new ArrayList<>())
@@ -142,6 +143,7 @@ public class ArticleService {
         article.setTypeProduit(request.getTypeProduit());
         article.setPrixUnitaire(request.getPrixUnitaire());
         article.setMpq(request.getMpq());
+        article.setStock(request.getStock() != null ? request.getStock() : article.getStock());
 
         // Mettre à jour les clients
         article.getArticleClients().clear();
@@ -216,6 +218,7 @@ public class ArticleService {
                 .typeProduit(article.getTypeProduit())
                 .prixUnitaire(article.getPrixUnitaire())
                 .mpq(article.getMpq())
+                .stock(article.getStock())
                 .clients(clientNames)
                 .processes(processDetails)
                 .isActive(article.getIsActive())

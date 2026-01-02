@@ -17,6 +17,7 @@ interface Article {
   typeProduit: string;
   prixUnitaire: number;
   mpq: number;
+  stock: number;
   processes: ProcessDetail[];
   clients: string[];
   createdAt?: string;
@@ -34,7 +35,7 @@ interface Article {
 export class ArticlesTableComponent implements OnInit {
   articles = signal<Article[]>([]);
   availableClients = signal<string[]>([]);
-  searchTerm = '';
+  searchTerm = signal(''); // ✅ Changé en signal
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -81,6 +82,7 @@ export class ArticlesTableComponent implements OnInit {
           typeProduit: a.typeProduit || '',
           prixUnitaire: a.prixUnitaire || 0,
           mpq: a.mpq || 0,
+          stock: a.stock || 0,
           processes: a.processes || [],
           clients: a.clients || [],
           createdAt: a.createdAt,
@@ -98,8 +100,9 @@ export class ArticlesTableComponent implements OnInit {
     });
   }
 
+  // ✅ RECHERCHE CORRIGÉE avec computed
   filteredArticles = computed(() => {
-    const term = this.searchTerm.toLowerCase();
+    const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.articles();
 
     return this.articles().filter(article =>
@@ -109,20 +112,29 @@ export class ArticlesTableComponent implements OnInit {
       article.sousFamille?.toLowerCase().includes(term) ||
       article.typeProcess?.toLowerCase().includes(term) ||
       article.typeProduit?.toLowerCase().includes(term) ||
-      article.clients.some(c => c.toLowerCase().includes(term))
+      article.stock?.toString().includes(term) ||
+      article.clients.some(c => c.toLowerCase().includes(term)) ||
+      article.processes.some(p => p.name.toLowerCase().includes(term))
     );
   });
 
-  /**
-   * Formate la date au format français DD/MM/YYYY HH:mm
-   */
+  // ✅ Calcul du temps total
+  calculateTotalTime(processes: ProcessDetail[]): number {
+    return processes.reduce((sum, p) => sum + (p.tempsParPF || 0), 0);
+  }
+
+  // ✅ Calcul du goulot (minimum cadence)
+  calculateBottleneck(processes: ProcessDetail[]): number | null {
+    if (processes.length === 0) return null;
+    const cadences = processes.map(p => p.cadenceMax).filter(c => c > 0);
+    return cadences.length > 0 ? Math.min(...cadences) : null;
+  }
+
   formatDate(dateString: string | undefined): string {
     if (!dateString) return '-';
 
     try {
-      // Le format backend est "yyyy-MM-dd HH:mm:ss"
       const date = new Date(dateString);
-
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const year = date.getFullYear();
@@ -146,6 +158,7 @@ export class ArticlesTableComponent implements OnInit {
       typeProduit: '',
       prixUnitaire: 0,
       mpq: 0,
+      stock: 0,
       processes: [],
       clients: [],
       isEditing: true,
@@ -156,7 +169,8 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   editRow(index: number) {
-    const article = this.articles()[index];
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
 
     if (!article.isNew && article.id) {
       this.originalArticles[article.id] = JSON.parse(JSON.stringify(article));
@@ -165,13 +179,14 @@ export class ArticlesTableComponent implements OnInit {
 
     this.articles.update(articles => {
       const updated = [...articles];
-      updated[index] = { ...updated[index], isEditing: true };
+      updated[realIndex] = { ...updated[realIndex], isEditing: true };
       return updated;
     });
   }
 
   saveRow(index: number) {
-    const article = this.articles()[index];
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
 
     if (!article.ref?.trim()) {
       this.errorMessage.set('La référence est obligatoire');
@@ -187,7 +202,6 @@ export class ArticlesTableComponent implements OnInit {
     this.errorMessage.set('');
 
     if (article.isNew) {
-      // CREATE
       const request: CreateArticleRequest = {
         ref: article.ref,
         article: article.article,
@@ -197,6 +211,7 @@ export class ArticlesTableComponent implements OnInit {
         typeProduit: article.typeProduit || '',
         prixUnitaire: article.prixUnitaire || 0,
         mpq: article.mpq || 0,
+        stock: article.stock || 0,
         clients: article.clients || [],
         processes: article.processes || []
       };
@@ -214,7 +229,6 @@ export class ArticlesTableComponent implements OnInit {
       });
 
     } else if (article.id) {
-      // UPDATE
       const request: UpdateArticleRequest = {
         ref: article.ref,
         article: article.article,
@@ -224,6 +238,7 @@ export class ArticlesTableComponent implements OnInit {
         typeProduit: article.typeProduit || '',
         prixUnitaire: article.prixUnitaire || 0,
         mpq: article.mpq || 0,
+        stock: article.stock || 0,
         clients: article.clients || [],
         processes: article.processes || []
       };
@@ -232,8 +247,9 @@ export class ArticlesTableComponent implements OnInit {
         next: (response) => {
           this.articles.update(articles => {
             const updated = [...articles];
-            updated[index] = {
+            updated[realIndex] = {
               ...response,
+              stock: response.stock || 0,
               isEditing: false,
               isNew: false
             };
@@ -253,10 +269,11 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   cancelEdit(index: number) {
-    const article = this.articles()[index];
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
 
     if (article.isNew) {
-      this.articles.update(articles => articles.filter((_, i) => i !== index));
+      this.articles.update(articles => articles.filter((_, i) => i !== realIndex));
       return;
     }
 
@@ -265,7 +282,7 @@ export class ArticlesTableComponent implements OnInit {
       if (original) {
         this.articles.update(articles => {
           const updated = [...articles];
-          updated[index] = { ...original, isEditing: false };
+          updated[realIndex] = { ...original, isEditing: false };
           return updated;
         });
         delete this.originalArticles[article.id];
@@ -275,10 +292,11 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   deleteRow(index: number) {
-    const article = this.articles()[index];
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
 
     if (article.isNew) {
-      this.articles.update(articles => articles.filter((_, i) => i !== index));
+      this.articles.update(articles => articles.filter((_, i) => i !== realIndex));
       return;
     }
 
@@ -301,17 +319,23 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   updateClients(articleIndex: number, clients: string[]) {
+    const article = this.filteredArticles()[articleIndex];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    
     this.articles.update(articles => {
       const updated = [...articles];
-      updated[articleIndex].clients = clients;
+      updated[realIndex].clients = clients;
       return updated;
     });
   }
 
   updateProcesses(articleIndex: number, processes: ProcessDetail[]) {
+    const article = this.filteredArticles()[articleIndex];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    
     this.articles.update(articles => {
       const updated = [...articles];
-      updated[articleIndex].processes = processes;
+      updated[realIndex].processes = processes;
       return updated;
     });
   }

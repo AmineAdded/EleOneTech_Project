@@ -23,6 +23,9 @@ public class ArticleResponse {
     private Double prixUnitaire;
     private Integer mpq;
 
+    // ✅ NOUVEAU: Stock
+    private Integer stock;
+
     @Builder.Default
     private List<String> clients = new ArrayList<>();
 
