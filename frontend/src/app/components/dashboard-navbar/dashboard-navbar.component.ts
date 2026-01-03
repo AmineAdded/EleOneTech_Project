@@ -66,8 +66,8 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
 
           <button
             class="nav-item"
-            [class.active]="activeMenu() === 'etat'"
-            (click)="setActiveMenu('etat')">
+            [class.active]="activeMenu() === 'production'"
+            (click)="setActiveMenu('production')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -75,7 +75,7 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
               <line x1="16" y1="17" x2="8" y2="17"/>
               <polyline points="10 9 9 9 8 9"/>
             </svg>
-            État
+            Production
           </button>
         </div>
       </div>
@@ -263,11 +263,11 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
   `]
 })
 export class DashboardNavbarComponent implements OnInit {
-  activeMenu = signal<'articles' | 'process' | 'clients' | 'etat'>('articles');
+  activeMenu = signal<'articles' | 'process' | 'clients' | 'production'>('articles');
   currentUser: AuthResponse | null = null;
 
   @Output() profileClick = new EventEmitter<void>();
-  @Output() menuChange = new EventEmitter<'articles' | 'process' | 'clients' | 'etat'>();
+  @Output() menuChange = new EventEmitter<'articles' | 'process' | 'clients' | 'production'>();
 
   constructor(
     private authService: AuthService,
@@ -280,7 +280,7 @@ export class DashboardNavbarComponent implements OnInit {
     });
   }
 
-  setActiveMenu(menu: 'articles' | 'process' | 'clients' | 'etat') {
+  setActiveMenu(menu: 'articles' | 'process' | 'clients' | 'production') {
     this.activeMenu.set(menu);
     this.menuChange.emit(menu);
   }
