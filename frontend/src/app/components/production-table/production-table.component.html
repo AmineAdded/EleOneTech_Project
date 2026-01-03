@@ -1,0 +1,276 @@
+<!-- frontend/src/app/components/production-table/production-table.component.html -->
+<div class="production-container">
+  <div class="table-header">
+    <h2>Gestion de la Production</h2>
+    <div class="header-actions">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher (Ref, Article, Quantité...)"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+      <button class="add-btn" (click)="addNewRow()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        Ajouter une production
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres avancés -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Référence d'article</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchArticleRef"
+          (ngModelChange)="searchByArticle()"
+        >
+          <option value="">Tous les articles</option>
+          <option *ngFor="let article of availableArticles()" [value]="article.ref">
+            {{ article.ref }} - {{ article.nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Date exacte</label>
+        <input
+          type="date"
+          class="filter-input"
+          [(ngModel)]="searchDate"
+          (ngModelChange)="searchByDateFilter()"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Année</label>
+        <input
+          type="number"
+          class="filter-input"
+          placeholder="2024"
+          [ngModel]="searchYear()"
+          (ngModelChange)="searchYear.set($event ? +$event : null)"
+          min="2000"
+          max="2100"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Mois</label>
+        <select
+          class="filter-select"
+          [ngModel]="searchMonth()"
+          (ngModelChange)="searchMonth.set($event ? +$event : null)"
+        >
+          <option [value]="null">Tous</option>
+          <option [value]="1">Janvier</option>
+          <option [value]="2">Février</option>
+          <option [value]="3">Mars</option>
+          <option [value]="4">Avril</option>
+          <option [value]="5">Mai</option>
+          <option [value]="6">Juin</option>
+          <option [value]="7">Juillet</option>
+          <option [value]="8">Août</option>
+          <option [value]="9">Septembre</option>
+          <option [value]="10">Octobre</option>
+          <option [value]="11">Novembre</option>
+          <option [value]="12">Décembre</option>
+        </select>
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage()" class="error-message">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+    {{ errorMessage() }}
+    <button class="close-error" (click)="errorMessage.set('')">×</button>
+  </div>
+
+  <div class="table-wrapper">
+    <!-- Productions en grille -->
+    <div class="production-grid">
+      <div
+        *ngFor="let prod of filteredProductions(); let i = index"
+        class="production-block"
+        [class.editing-block]="isEditing(prod)"
+      >
+        <table class="production-main-table">
+          <thead>
+            <tr>
+              <th>Ref Article</th>
+              <th>Article</th>
+              <th>Quantité</th>
+              <th>Date de Production</th>
+              <th>Stock Actuel</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <!-- Ref Article -->
+              <td>
+                <select
+                  *ngIf="isEditing(prod)"
+                  [(ngModel)]="prod.articleRef"
+                  (ngModelChange)="prod.articleNom = getArticleNomFromRef(prod.articleRef)"
+                  class="table-select"
+                >
+                  <option value="">Sélectionner un article</option>
+                  <option *ngFor="let article of availableArticles()" [value]="article.ref">
+                    {{ article.ref }} - {{ article.nom }}
+                  </option>
+                </select>
+                <input
+                  *ngIf="!isEditing(prod)"
+                  type="text"
+                  [value]="prod.articleRef"
+                  disabled
+                  class="table-input"
+                />
+              </td>
+
+              <!-- Article Nom -->
+              <td>
+                <input
+                  type="text"
+                  [value]="prod.articleNom"
+                  disabled
+                  class="table-input"
+                />
+              </td>
+
+              <!-- Quantité -->
+              <td>
+                <input
+                  type="number"
+                  [(ngModel)]="prod.quantite"
+                  [disabled]="!isEditing(prod)"
+                  class="table-input"
+                  min="1"
+                  placeholder="0"
+                />
+              </td>
+
+              <!-- Date de Production -->
+              <td>
+                <input
+                  *ngIf="isEditing(prod)"
+                  type="date"
+                  [(ngModel)]="prod.dateProduction"
+                  class="table-input"
+                />
+                <span *ngIf="!isEditing(prod)" class="date-display">
+                  {{ formatDate(prod.dateProduction) }}
+                </span>
+              </td>
+
+              <!-- Stock Actuel -->
+              <td class="stock-cell">
+                <span 
+                  class="stock-badge"
+                  [class.stock-high]="prod.stockActuel > 100"
+                  [class.stock-medium]="prod.stockActuel > 50 && prod.stockActuel <= 100"
+                  [class.stock-low]="prod.stockActuel <= 50">
+                  {{ prod.stockActuel }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <button
+                    *ngIf="!isEditing(prod)"
+                    class="edit-btn"
+                    (click)="editRow(i)"
+                    title="Modifier"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+
+                  <button
+                    *ngIf="isEditing(prod)"
+                    class="save-btn"
+                    (click)="saveRow(i)"
+                    title="Enregistrer"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+
+                  <button
+                    *ngIf="isEditing(prod)"
+                    class="cancel-btn"
+                    (click)="cancelEdit(i)"
+                    title="Annuler"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
+                  <button
+                    class="delete-btn"
+                    (click)="deleteRow(i)"
+                    title="Supprimer"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredProductions().length === 0 && productions().length > 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        <p>Aucun résultat trouvé pour cette recherche.</p>
+      </div>
+
+      <div *ngIf="productions().length === 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <p>Aucune production. Cliquez sur "Ajouter une production" pour commencer.</p>
+      </div>
+    </div>
+  </div>
+</div>

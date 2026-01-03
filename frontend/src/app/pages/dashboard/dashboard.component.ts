@@ -13,6 +13,7 @@ import { DashboardNavbarComponent } from '../../components/dashboard-navbar/dash
 import { ArticlesTableComponent } from '../../components/articles-table/articles-table.component';
 import { ClientsTableComponent } from '../../components/clients-table/clients-table.component';
 import { ProcessTableComponent } from '../../components/process-table/process-table.component';
+import { ProductionTableComponent } from '../../components/production-table/production-table.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,6 +25,7 @@ import { ProcessTableComponent } from '../../components/process-table/process-ta
     ArticlesTableComponent,
     ClientsTableComponent,
     ProcessTableComponent,
+    ProductionTableComponent,
   ],
   template: `
     <div class="dashboard-container">
@@ -41,9 +43,8 @@ import { ProcessTableComponent } from '../../components/process-table/process-ta
         <app-process-table *ngIf="activeMenu() === 'process'"></app-process-table>
 
         <!-- Production - nouvelle section -->
-        <div *ngIf="activeMenu() === 'production'" class="coming-soon">
-          <h2>Production - En développement</h2>
-        </div>
+        <app-production-table *ngIf="activeMenu() === 'production'"></app-production-table>
+
       </div>
 
       <!-- Modal Profil (code existant inchangé) -->
