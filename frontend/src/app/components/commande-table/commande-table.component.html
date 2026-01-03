@@ -1,0 +1,325 @@
+<!-- frontend/src/app/components/commande-table/commande-table.component.html -->
+<div class="commande-container">
+  <div class="table-header">
+    <h2>Gestion des Commandes</h2>
+    <div class="header-actions">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher (Ref, Article, Client, Quantité...)"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+      <button class="add-btn" (click)="addNewRow()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        Ajouter une commande
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres avancés -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Référence d'article</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchArticleRef"
+          (ngModelChange)="searchByArticle()"
+        >
+          <option value="">Tous les articles</option>
+          <option *ngFor="let article of availableArticles()" [value]="article.ref">
+            {{ article.ref }} - {{ article.nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Client</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchClientNom"
+          (ngModelChange)="searchByClient()"
+        >
+          <option value="">Tous les clients</option>
+          <option *ngFor="let client of availableClients()" [value]="client">
+            {{ client }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Type de date</label>
+        <select
+          class="filter-select"
+          [ngModel]="searchTypeDate()"
+          (ngModelChange)="searchTypeDate.set($event); searchByDate()"
+        >
+          <option value="souhaitee">Date souhaitée</option>
+          <option value="ajout">Date d'ajout</option>
+        </select>
+      </div>
+
+      <div class="filter-group" *ngIf="searchTypeDate() === 'souhaitee'">
+        <label>Date souhaitée</label>
+        <input
+          type="date"
+          class="filter-input"
+          [(ngModel)]="searchDateSouhaitee"
+          (ngModelChange)="searchByDate()"
+        />
+      </div>
+
+      <div class="filter-group" *ngIf="searchTypeDate() === 'ajout'">
+        <label>Date d'ajout</label>
+        <input
+          type="date"
+          class="filter-input"
+          [(ngModel)]="searchDateAjout"
+          (ngModelChange)="searchByDate()"
+        />
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- ✅ SOMMAIRE (affiché en haut si filtres actifs) -->
+  <div class="summary-section" *ngIf="summary()">
+    <div class="summary-card">
+      <div class="summary-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+      </div>
+      <div class="summary-content">
+        <h3>Résumé des Commandes</h3>
+        <div class="summary-stats">
+          <div class="stat-item">
+            <span class="stat-label">Total Quantité</span>
+            <span class="stat-value highlight">{{ summary()!.totalQuantite }}</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-label">Nombre de Commandes</span>
+            <span class="stat-value">{{ summary()!.nombreCommandes }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage()" class="error-message">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+    {{ errorMessage() }}
+    <button class="close-error" (click)="errorMessage.set('')">×</button>
+  </div>
+
+  <div class="table-wrapper">
+    <!-- Commandes en grille -->
+    <div class="commande-grid">
+      <!-- ✅ HEADER FIXE -->
+      <div class="commande-header" *ngIf="filteredCommandes().length > 0">
+        <table class="commande-main-table">
+          <thead>
+            <tr>
+              <th>Ref Article</th>
+              <th>Article</th>
+              <th>Client</th>
+              <th>Quantité</th>
+              <th>Date Souhaitée</th>
+              <th>Date d'Ajout</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+      <!-- ✅ LIGNES DE DONNÉES -->
+      <div
+        *ngFor="let cmd of filteredCommandes(); let i = index"
+        class="commande-block"
+        [class.editing-block]="isEditing(cmd)"
+      >
+        <table class="commande-main-table">
+          <tbody>
+            <tr>
+              <!-- Ref Article -->
+              <td>
+                <select
+                  *ngIf="isEditing(cmd)"
+                  [(ngModel)]="cmd.articleRef"
+                  (ngModelChange)="cmd.articleNom = getArticleNomFromRef(cmd.articleRef)"
+                  class="table-select"
+                >
+                  <option value="">Sélectionner un article</option>
+                  <option *ngFor="let article of availableArticles()" [value]="article.ref">
+                    {{ article.ref }} - {{ article.nom }}
+                  </option>
+                </select>
+                <input
+                  *ngIf="!isEditing(cmd)"
+                  type="text"
+                  [value]="cmd.articleRef"
+                  disabled
+                  class="table-input"
+                />
+              </td>
+
+              <!-- Article Nom -->
+              <td>
+                <input
+                  type="text"
+                  [value]="cmd.articleNom"
+                  disabled
+                  class="table-input"
+                />
+              </td>
+
+              <!-- Client -->
+              <td>
+                <select
+                  *ngIf="isEditing(cmd)"
+                  [(ngModel)]="cmd.clientNom"
+                  class="table-select"
+                >
+                  <option value="">Sélectionner un client</option>
+                  <option *ngFor="let client of availableClients()" [value]="client">
+                    {{ client }}
+                  </option>
+                </select>
+                <input
+                  *ngIf="!isEditing(cmd)"
+                  type="text"
+                  [value]="cmd.clientNom"
+                  disabled
+                  class="table-input"
+                />
+              </td>
+
+              <!-- Quantité -->
+              <td>
+                <input
+                  type="number"
+                  [(ngModel)]="cmd.quantite"
+                  [disabled]="!isEditing(cmd)"
+                  class="table-input"
+                  min="1"
+                  placeholder="0"
+                />
+              </td>
+
+              <!-- Date Souhaitée -->
+              <td>
+                <input
+                  *ngIf="isEditing(cmd)"
+                  type="date"
+                  [(ngModel)]="cmd.dateSouhaitee"
+                  class="table-input"
+                />
+                <span *ngIf="!isEditing(cmd)" class="date-display date-souhaitee">
+                  {{ formatDate(cmd.dateSouhaitee) }}
+                </span>
+              </td>
+
+              <!-- Date d'Ajout -->
+              <td>
+                <span class="date-display date-ajout">
+                  {{ formatDate(cmd.dateAjout) }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <button
+                    *ngIf="!isEditing(cmd)"
+                    class="edit-btn"
+                    (click)="editRow(i)"
+                    title="Modifier"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+
+                  <button
+                    *ngIf="isEditing(cmd)"
+                    class="save-btn"
+                    (click)="saveRow(i)"
+                    title="Enregistrer"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+
+                  <button
+                    *ngIf="isEditing(cmd)"
+                    class="cancel-btn"
+                    (click)="cancelEdit(i)"
+                    title="Annuler"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
+                  <button
+                    class="delete-btn"
+                    (click)="deleteRow(i)"
+                    title="Supprimer"
+                    [disabled]="isLoading()"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredCommandes().length === 0 && commandes().length > 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        <p>Aucun résultat trouvé pour cette recherche.</p>
+      </div>
+
+      <div *ngIf="commandes().length === 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <p>Aucune commande. Cliquez sur "Ajouter une commande" pour commencer.</p>
+      </div>
+    </div>
+  </div>
+</div>
