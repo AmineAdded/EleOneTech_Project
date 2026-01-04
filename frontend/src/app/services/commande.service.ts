@@ -5,15 +5,19 @@ import { Observable } from 'rxjs';
 
 export interface CreateCommandeRequest {
   articleRef: string;
+  numeroCommandeClient: string;  // NOUVEAU
   clientNom: string;
   quantite: number;
+  typeCommande: string;   
   dateSouhaitee: string;
 }
 
 export interface UpdateCommandeRequest {
   articleRef: string;
+  numeroCommandeClient: string;  // NOUVEAU
   clientNom: string;
   quantite: number;
+  typeCommande: string;   
   dateSouhaitee: string;
 }
 
@@ -21,8 +25,10 @@ export interface CommandeResponse {
   id: number;
   articleRef: string;
   articleNom: string;
+  numeroCommandeClient: string;  // NOUVEAU
   clientNom: string;
   quantite: number;
+  typeCommande: string;   
   dateSouhaitee: string;
   dateAjout: string;
   isActive: boolean;
@@ -32,6 +38,8 @@ export interface CommandeResponse {
 
 export interface CommandeSummaryResponse {
   totalQuantite: number;
+  quantiteFerme: number;          // NOUVEAU
+  quantitePlanifiee: number;      // NOUVEAU
   nombreCommandes: number;
 }
 
