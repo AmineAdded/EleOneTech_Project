@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class CommandeSummaryResponse {
     private Integer totalQuantite;
     private Integer nombreCommandes;
+    private Integer quantiteFerme;
+    private Integer quantitePlanifiee;
 }

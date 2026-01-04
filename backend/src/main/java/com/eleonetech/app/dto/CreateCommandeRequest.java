@@ -26,4 +26,9 @@ public class CreateCommandeRequest {
 
     @NotNull(message = "La date souhaitée est obligatoire")
     private String dateSouhaitee; // Format: YYYY-MM-DD
+    @NotBlank(message = "Le numéro de commande client est obligatoire")
+    private String numeroCommandeClient;
+
+    @NotBlank(message = "Le type de commande est obligatoire")
+    private String typeCommande; // "PLANIFIEE" ou "FERME"
 }

@@ -16,6 +16,8 @@ public class CommandeResponse {
     private String articleNom;
     private String clientNom;
     private Integer quantite;
+    private String numeroCommandeClient;
+    private String typeCommande;
     private String dateSouhaitee;
     private String dateAjout; // createdAt formaté
     private Boolean isActive;

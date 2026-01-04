@@ -151,4 +151,72 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
             @Param("dateDebut") LocalDate dateDebut,
             @Param("dateFin") LocalDate dateFin
     );
+    // Sommaires avec distinction Ferme/Planifiée
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'FERME' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef AND c.isActive = true")
+    Integer sumQuantiteFermeByArticleRef(@Param("articleRef") String articleRef);
+
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'PLANIFIEE' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef AND c.isActive = true")
+    Integer sumQuantitePlanifieeByArticleRef(@Param("articleRef") String articleRef);
+
+    // Avec date souhaitée
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'FERME' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND c.dateSouhaitee = :date AND c.isActive = true")
+    Integer sumQuantiteFermeByArticleRefAndDateSouhaitee(
+            @Param("articleRef") String articleRef, @Param("date") LocalDate date);
+
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'PLANIFIEE' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND c.dateSouhaitee = :date AND c.isActive = true")
+    Integer sumQuantitePlanifieeByArticleRefAndDateSouhaitee(
+            @Param("articleRef") String articleRef, @Param("date") LocalDate date);
+
+    // Avec date ajout
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'FERME' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND DATE(c.createdAt) = :date AND c.isActive = true")
+    Integer sumQuantiteFermeByArticleRefAndDateAjout(
+            @Param("articleRef") String articleRef, @Param("date") LocalDate date);
+
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'PLANIFIEE' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND DATE(c.createdAt) = :date AND c.isActive = true")
+    Integer sumQuantitePlanifieeByArticleRefAndDateAjout(
+            @Param("articleRef") String articleRef, @Param("date") LocalDate date);
+
+    // Avec période souhaitée
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'FERME' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND c.dateSouhaitee BETWEEN :dateDebut AND :dateFin AND c.isActive = true")
+    Integer sumQuantiteFermeByArticleRefAndPeriodeSouhaitee(
+            @Param("articleRef") String articleRef,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
+
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'PLANIFIEE' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND c.dateSouhaitee BETWEEN :dateDebut AND :dateFin AND c.isActive = true")
+    Integer sumQuantitePlanifieeByArticleRefAndPeriodeSouhaitee(
+            @Param("articleRef") String articleRef,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
+
+    // Avec période ajout
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'FERME' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND DATE(c.createdAt) BETWEEN :dateDebut AND :dateFin AND c.isActive = true")
+    Integer sumQuantiteFermeByArticleRefAndPeriodeAjout(
+            @Param("articleRef") String articleRef,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
+
+    @Query("SELECT SUM(CASE WHEN c.typeCommande = 'PLANIFIEE' THEN c.quantite ELSE 0 END) " +
+            "FROM Commande c WHERE c.article.ref = :articleRef " +
+            "AND DATE(c.createdAt) BETWEEN :dateDebut AND :dateFin AND c.isActive = true")
+    Integer sumQuantitePlanifieeByArticleRefAndPeriodeAjout(
+            @Param("articleRef") String articleRef,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
 }

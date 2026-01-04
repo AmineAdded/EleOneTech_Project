@@ -43,6 +43,8 @@ public class CommandeService {
         Commande commande = Commande.builder()
                 .article(article)
                 .client(client)
+                .numeroCommandeClient(request.getNumeroCommandeClient())
+                .typeCommande(request.getTypeCommande())
                 .quantite(request.getQuantite())
                 .dateSouhaitee(dateSouhaitee)
                 .isActive(true)
@@ -140,8 +142,13 @@ public class CommandeService {
     public CommandeSummaryResponse getSummaryByArticleRef(String articleRef) {
         List<Commande> commandes = commandeRepository.findByArticleRef(articleRef);
         Integer total = commandeRepository.sumQuantiteByArticleRef(articleRef);
+        Integer ferme = commandeRepository.sumQuantiteFermeByArticleRef(articleRef);
+        Integer planifiee = commandeRepository.sumQuantitePlanifieeByArticleRef(articleRef);
+
         return CommandeSummaryResponse.builder()
                 .totalQuantite(total != null ? total : 0)
+                .quantiteFerme(ferme != null ? ferme : 0)
+                .quantitePlanifiee(planifiee != null ? planifiee : 0)
                 .nombreCommandes(commandes.size())
                 .build();
     }
@@ -150,8 +157,12 @@ public class CommandeService {
         LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
         List<Commande> commandes = commandeRepository.findByArticleRefAndDateSouhaitee(articleRef, localDate);
         Integer total = commandeRepository.sumQuantiteByArticleRefAndDateSouhaitee(articleRef, localDate);
+        Integer ferme = commandeRepository.sumQuantiteFermeByArticleRef(articleRef);
+        Integer planifiee = commandeRepository.sumQuantitePlanifieeByArticleRef(articleRef);
         return CommandeSummaryResponse.builder()
                 .totalQuantite(total != null ? total : 0)
+                .quantiteFerme(ferme != null ? ferme : 0)
+                .quantitePlanifiee(planifiee != null ? planifiee : 0)
                 .nombreCommandes(commandes.size())
                 .build();
     }
@@ -160,8 +171,12 @@ public class CommandeService {
         LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
         List<Commande> commandes = commandeRepository.findByArticleRefAndDateAjout(articleRef, localDate);
         Integer total = commandeRepository.sumQuantiteByArticleRefAndDateAjout(articleRef, localDate);
+        Integer ferme = commandeRepository.sumQuantiteFermeByArticleRef(articleRef);
+        Integer planifiee = commandeRepository.sumQuantitePlanifieeByArticleRef(articleRef);
         return CommandeSummaryResponse.builder()
                 .totalQuantite(total != null ? total : 0)
+                .quantiteFerme(ferme != null ? ferme : 0)
+                .quantitePlanifiee(planifiee != null ? planifiee : 0)
                 .nombreCommandes(commandes.size())
                 .build();
     }
@@ -172,8 +187,12 @@ public class CommandeService {
         LocalDate fin = LocalDate.parse(dateFin, DATE_FORMATTER);
         List<Commande> commandes = commandeRepository.findByArticleRefAndPeriodeSouhaitee(articleRef, debut, fin);
         Integer total = commandeRepository.sumQuantiteByArticleRefAndPeriodeSouhaitee(articleRef, debut, fin);
+        Integer ferme = commandeRepository.sumQuantiteFermeByArticleRef(articleRef);
+        Integer planifiee = commandeRepository.sumQuantitePlanifieeByArticleRef(articleRef);
         return CommandeSummaryResponse.builder()
                 .totalQuantite(total != null ? total : 0)
+                .quantiteFerme(ferme != null ? ferme : 0)
+                .quantitePlanifiee(planifiee != null ? planifiee : 0)
                 .nombreCommandes(commandes.size())
                 .build();
     }
@@ -183,8 +202,12 @@ public class CommandeService {
         LocalDate fin = LocalDate.parse(dateFin, DATE_FORMATTER);
         List<Commande> commandes = commandeRepository.findByArticleRefAndPeriodeAjout(articleRef, debut, fin);
         Integer total = commandeRepository.sumQuantiteByArticleRefAndPeriodeAjout(articleRef, debut, fin);
+        Integer ferme = commandeRepository.sumQuantiteFermeByArticleRef(articleRef);
+        Integer planifiee = commandeRepository.sumQuantitePlanifieeByArticleRef(articleRef);
         return CommandeSummaryResponse.builder()
                 .totalQuantite(total != null ? total : 0)
+                .quantiteFerme(ferme != null ? ferme : 0)
+                .quantitePlanifiee(planifiee != null ? planifiee : 0)
                 .nombreCommandes(commandes.size())
                 .build();
     }
@@ -247,6 +270,8 @@ public class CommandeService {
         commande.setClient(client);
         commande.setQuantite(request.getQuantite());
         commande.setDateSouhaitee(dateSouhaitee);
+        commande.setNumeroCommandeClient(request.getNumeroCommandeClient());
+        commande.setTypeCommande(request.getTypeCommande());
 
         commande = commandeRepository.save(commande);
 
@@ -272,7 +297,9 @@ public class CommandeService {
                 .articleRef(commande.getArticle().getRef())
                 .articleNom(commande.getArticle().getArticle())
                 .clientNom(commande.getClient().getNomComplet())
+                .numeroCommandeClient(commande.getNumeroCommandeClient())
                 .quantite(commande.getQuantite())
+                .typeCommande(commande.getTypeCommande())
                 .dateSouhaitee(commande.getDateSouhaitee().format(DATE_FORMATTER))
                 .dateAjout(commande.getCreatedAt().toLocalDate().format(DATE_FORMATTER))
                 .isActive(commande.getIsActive())

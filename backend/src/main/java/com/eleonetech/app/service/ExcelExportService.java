@@ -39,8 +39,10 @@ public class ExcelExportService {
             String[] columns = {
                     "Ref Article",
                     "Article",
+                    "N° Commande Client",
                     "Client",
                     "Quantité",
+                    "Type",
                     "Date Souhaitée",
                     "Date de Création"
             };
@@ -71,19 +73,29 @@ public class ExcelExportService {
                 clientCell.setCellValue(commande.getClientNom());
                 clientCell.setCellStyle(borderStyle);
 
+                // N° Commande Client
+                Cell numeroCell = row.createCell(3);
+                numeroCell.setCellValue(commande.getNumeroCommandeClient());
+                numeroCell.setCellStyle(borderStyle);
+
                 // Quantité
-                Cell quantiteCell = row.createCell(3);
+                Cell quantiteCell = row.createCell(4);
                 quantiteCell.setCellValue(commande.getQuantite());
                 quantiteCell.setCellStyle(numberStyle);
 
+                // Type
+                Cell typeCell = row.createCell(5);
+                typeCell.setCellValue(commande.getTypeCommande());
+                typeCell.setCellStyle(borderStyle);
+
                 // Date Souhaitée
-                Cell dateSouhaiteeCell = row.createCell(4);
+                Cell dateSouhaiteeCell = row.createCell(6);
                 LocalDate dateSouhaitee = LocalDate.parse(commande.getDateSouhaitee());
                 dateSouhaiteeCell.setCellValue(dateSouhaitee.format(DATE_FORMATTER));
                 dateSouhaiteeCell.setCellStyle(dateStyle);
 
                 // Date de Création
-                Cell dateCreationCell = row.createCell(5);
+                Cell dateCreationCell = row.createCell(7);
                 LocalDate dateCreation = LocalDate.parse(commande.getDateAjout());
                 dateCreationCell.setCellValue(dateCreation.format(DATE_FORMATTER));
                 dateCreationCell.setCellStyle(dateStyle);

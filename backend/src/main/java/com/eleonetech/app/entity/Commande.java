@@ -29,6 +29,9 @@ public class Commande {
     @NotNull(message = "L'article est obligatoire")
     private Article article;
 
+    @Column(name = "numero_commande_client", length = 100)
+    private String numeroCommandeClient;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     @NotNull(message = "Le client est obligatoire")
@@ -38,6 +41,10 @@ public class Commande {
     @NotNull(message = "La quantité est obligatoire")
     @Min(value = 1, message = "La quantité doit être au moins 1")
     private Integer quantite;
+
+    @Column(name = "type_commande", length = 20)
+    @NotNull(message = "Le type de commande est obligatoire")
+    private String typeCommande; // "PLANIFIEE" ou "FERME"
 
     @Column(name = "date_souhaitee", nullable = false)
     @NotNull(message = "La date souhaitée est obligatoire")
@@ -52,6 +59,7 @@ public class Commande {
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
+
 
     @PrePersist
     protected void onCreate() {
