@@ -90,12 +90,24 @@ export class ArticleService {
   }
 
   // ✅ NOUVEAU: Upload d'image
-  uploadImage(articleId: number, file: File): Observable<ArticleResponse> {
-    const formData = new FormData();
-    formData.append('image', file);
-    return this.http.post<ArticleResponse>(`${this.apiUrl}/${articleId}/image`, formData);
-  }
+ // frontend/src/app/services/article.service.ts (vérifier cette partie)
+// ✅ NOUVEAU: Upload d'image
+uploadImage(articleId: number, file: File): Observable<ArticleResponse> {
+  const formData = new FormData();
+  formData.append('image', file);
 
+  console.log('📤 Uploading image:', {
+    articleId,
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: file.type
+  });
+
+  return this.http.post<ArticleResponse>(
+    `${this.apiUrl}/${articleId}/image`,
+    formData
+  );
+}
   // ✅ NOUVEAU: URL de l'image
   getImageUrl(filename: string): string {
     return `${this.apiUrl}/image/${filename}`;

@@ -262,7 +262,7 @@ export class ArticlesTableComponent implements OnInit {
   this.errorMessage.set('');
 
   if (article.isNew) {
-    // CRÉATION D'UN NOUVEL ARTICLE
+    // CRÉATION
     const request: CreateArticleRequest = {
       ref: article.ref,
       article: article.article,
@@ -281,23 +281,30 @@ export class ArticlesTableComponent implements OnInit {
       next: (response) => {
         console.log('✅ Article créé:', response);
 
-        // Si une image a été sélectionnée, l'uploader
         if (article.imageFile) {
-          console.log('📤 Upload de l\'image...');
+          console.log('📤 Upload de l\'image pour article ID:', response.id);
+          console.log('📄 Fichier:', article.imageFile.name, article.imageFile.size, 'bytes');
+
           this.articleService.uploadImage(response.id, article.imageFile).subscribe({
             next: (updatedResponse) => {
-              console.log('✅ Image uploadée avec succès:', updatedResponse);
+              console.log('✅ Image uploadée:', updatedResponse.imageFilename);
               this.loadArticles();
               this.isLoading.set(false);
             },
             error: (err) => {
               console.error('❌ Erreur upload image:', err);
-              this.errorMessage.set('Article créé mais erreur lors de l\'upload de l\'image');
+              console.error('❌ Détails erreur:', {
+                status: err.status,
+                message: err.message,
+                error: err.error
+              });
+              this.errorMessage.set('Article créé mais erreur lors de l\'upload de l\'image: ' + (err.error?.message || err.message));
               this.loadArticles();
               this.isLoading.set(false);
             }
           });
         } else {
+          console.log('ℹ️ Pas d\'image à uploader');
           this.loadArticles();
           this.isLoading.set(false);
         }

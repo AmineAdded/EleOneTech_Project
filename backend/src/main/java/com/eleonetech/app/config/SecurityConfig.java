@@ -1,3 +1,4 @@
+// backend/src/main/java/com/eleonetech/app/config/SecurityConfig.java
 package com.eleonetech.app.config;
 
 import com.eleonetech.app.security.JwtAuthenticationFilter;
@@ -34,6 +35,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // ✅ AJOUTER CETTE LIGNE : Autoriser l'accès public aux images
+                        .requestMatchers("/api/articles/image/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -49,22 +52,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Autoriser l'origine du frontend
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-
-        // Autoriser toutes les méthodes HTTP
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // Autoriser tous les headers
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // Autoriser les credentials (important pour les tokens)
         configuration.setAllowCredentials(true);
-
-        // Headers exposés au client
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
-
-        // Durée de cache pour les requêtes preflight
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

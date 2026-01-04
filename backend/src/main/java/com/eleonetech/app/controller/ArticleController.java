@@ -40,13 +40,21 @@ public class ArticleController {
     }
 
     // ✅ NOUVEAU: Upload d'image
+    // backend/src/main/java/com/eleonetech/app/controller/ArticleController.java
     @PostMapping("/{id}/image")
     public ResponseEntity<?> uploadImage(
             @PathVariable Long id,
             @RequestParam("image") MultipartFile file) {
         try {
             log.info("📤 Upload image pour article ID: {}", id);
-            log.info("📄 Nom fichier: {}, Taille: {} bytes", file.getOriginalFilename(), file.getSize());
+            log.info("📄 Nom fichier: {}, Taille: {} bytes, Type: {}",
+                    file.getOriginalFilename(), file.getSize(), file.getContentType());
+
+            // ✅ Validation
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("Le fichier est vide"));
+            }
 
             ArticleResponse response = articleService.updateArticleImage(id, file);
 
