@@ -32,7 +32,7 @@
   border-radius: 8px;
   border: 1.5px solid #ddd;
   font-size: 0.9rem;
-  min-width: 300px;
+  min-width: 380px; /* Augmenté de 300px à 380px */
   transition: all 0.3s ease;
 }
 
