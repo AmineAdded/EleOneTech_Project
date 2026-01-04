@@ -60,7 +60,7 @@
           (ngModelChange)="searchTypeDate.set($event); searchByDate()"
         >
           <option value="souhaitee">Date souhaitée</option>
-          <option value="ajout">Date d'ajout</option>
+          <option value="ajout">Date de création</option>
         </select>
       </div>
 
@@ -75,7 +75,7 @@
       </div>
 
       <div class="filter-group" *ngIf="searchTypeDate() === 'ajout'">
-        <label>Date d'ajout</label>
+        <label>Date de création</label>
         <input
           type="date"
           class="filter-input"
@@ -143,7 +143,7 @@
               <th>Client</th>
               <th>Quantité</th>
               <th>Date Souhaitée</th>
-              <th>Date d'Ajout</th>
+              <th>Date de création</th>
               <th>Actions</th>
             </tr>
           </thead>
