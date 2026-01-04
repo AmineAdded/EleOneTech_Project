@@ -49,10 +49,13 @@ public class Article {
     @Column(name = "mpq")
     private Integer mpq;
 
-    // ✅ NOUVEAU: Colonne Stock
     @Column(name = "stock")
     @Builder.Default
     private Integer stock = 0;
+
+    // ✅ NOUVEAU: Champ pour stocker le nom du fichier image
+    @Column(name = "image_filename", length = 255)
+    private String imageFilename;
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

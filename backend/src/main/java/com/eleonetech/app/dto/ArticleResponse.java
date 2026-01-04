@@ -22,9 +22,10 @@ public class ArticleResponse {
     private String typeProduit;
     private Double prixUnitaire;
     private Integer mpq;
-
-    // ✅ NOUVEAU: Stock
     private Integer stock;
+
+    // ✅ NOUVEAU: Nom du fichier image
+    private String imageFilename;
 
     @Builder.Default
     private List<String> clients = new ArrayList<>();

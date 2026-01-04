@@ -49,6 +49,7 @@ export interface ArticleResponse {
   prixUnitaire: number;
   mpq: number;
   stock: number;
+  imageFilename?: string; // ✅ NOUVEAU
   clients: string[];
   processes: ProcessDetail[];
   isActive: boolean;
@@ -86,5 +87,22 @@ export class ArticleService {
 
   deleteArticle(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  // ✅ NOUVEAU: Upload d'image
+  uploadImage(articleId: number, file: File): Observable<ArticleResponse> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post<ArticleResponse>(`${this.apiUrl}/${articleId}/image`, formData);
+  }
+
+  // ✅ NOUVEAU: URL de l'image
+  getImageUrl(filename: string): string {
+    return `${this.apiUrl}/image/${filename}`;
+  }
+
+  // ✅ NOUVEAU: Suppression d'image
+  deleteImage(articleId: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/${articleId}/image`);
   }
 }

@@ -22,6 +22,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.eleonetech.app.service.FileStorageService;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class ArticleService {
     private final ProcessRepository processRepository;
     private final ArticleClientRepository articleClientRepository;
     private final ArticleProcessRepository articleProcessRepository;
+    private final FileStorageService fileStorageService; // ✅ AJOUTER CETTE LIGNE
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -182,23 +187,65 @@ public class ArticleService {
 
         return mapToResponse(article);
     }
+    @Transactional
+    public ArticleResponse updateArticleImage(Long id, MultipartFile file) throws IOException {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        // Supprimer l'ancienne image si elle existe
+        if (article.getImageFilename() != null) {
+            fileStorageService.deleteImage(article.getImageFilename());
+        }
+
+        // Sauvegarder la nouvelle image
+        String filename = fileStorageService.saveImage(file);
+        article.setImageFilename(filename);
+
+        article = articleRepository.save(article);
+        log.info("Image mise à jour pour l'article: {}", article.getRef());
+
+        // Recharger avec les relations
+        articleRepository.findByIdWithClients(id);
+        articleRepository.findByIdWithProcesses(id);
+
+        return mapToResponse(article);
+    }
+
+    /**
+     * Supprime l'image d'un article
+     */
+    @Transactional
+    public void deleteArticleImage(Long id) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        if (article.getImageFilename() != null) {
+            fileStorageService.deleteImage(article.getImageFilename());
+            article.setImageFilename(null);
+            articleRepository.save(article);
+            log.info("Image supprimée pour l'article: {}", article.getRef());
+        }
+    }
 
     @Transactional
     public void deleteArticle(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
 
+        // Supprimer l'image si elle existe
+        if (article.getImageFilename() != null) {
+            fileStorageService.deleteImage(article.getImageFilename());
+        }
+
         articleRepository.deleteById(id);
         log.info("Article supprimé: {} (Ref: {})", article.getArticle(), article.getRef());
     }
 
     private ArticleResponse mapToResponse(Article article) {
-        // Mapper les clients
         List<String> clientNames = article.getArticleClients().stream()
                 .map(ac -> ac.getClient().getNomComplet())
                 .collect(Collectors.toList());
 
-        // Mapper les process
         List<ProcessDetailDTO> processDetails = article.getArticleProcesses().stream()
                 .map(ap -> ProcessDetailDTO.builder()
                         .id("process-" + ap.getProcess().getId())
@@ -219,6 +266,7 @@ public class ArticleService {
                 .prixUnitaire(article.getPrixUnitaire())
                 .mpq(article.getMpq())
                 .stock(article.getStock())
+                .imageFilename(article.getImageFilename()) // ✅ NOUVEAU
                 .clients(clientNames)
                 .processes(processDetails)
                 .isActive(article.getIsActive())
@@ -226,4 +274,5 @@ public class ArticleService {
                 .updatedAt(article.getUpdatedAt().format(formatter))
                 .build();
     }
+
 }

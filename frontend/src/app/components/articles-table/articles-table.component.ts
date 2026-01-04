@@ -18,6 +18,9 @@ interface Article {
   prixUnitaire: number;
   mpq: number;
   stock: number;
+  imageFilename?: string; // ✅ NOUVEAU
+  imagePreview?: string; // ✅ NOUVEAU: pour l'aperçu local
+  imageFile?: File; // ✅ NOUVEAU: fichier en attente d'upload
   processes: ProcessDetail[];
   clients: string[];
   createdAt?: string;
@@ -35,7 +38,7 @@ interface Article {
 export class ArticlesTableComponent implements OnInit {
   articles = signal<Article[]>([]);
   availableClients = signal<string[]>([]);
-  searchTerm = signal(''); // ✅ Changé en signal
+  searchTerm = signal('');
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -83,17 +86,17 @@ export class ArticlesTableComponent implements OnInit {
           prixUnitaire: a.prixUnitaire || 0,
           mpq: a.mpq || 0,
           stock: a.stock || 0,
+          imageFilename: a.imageFilename, // ✅ NOUVEAU
           processes: a.processes || [],
           clients: a.clients || [],
           createdAt: a.createdAt,
           isEditing: false,
           isNew: false
         }));
-        // ✅ Trier par date de création décroissante (plus récent en premier)
         mapped.sort((a, b) => {
           const dateA = new Date(a.createdAt || 0).getTime();
           const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA; // Ordre décroissant
+          return dateB - dateA;
         });
         this.articles.set(mapped);
         this.isLoading.set(false);
@@ -106,7 +109,6 @@ export class ArticlesTableComponent implements OnInit {
     });
   }
 
-  // ✅ RECHERCHE CORRIGÉE avec computed
   filteredArticles = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.articles();
@@ -124,12 +126,64 @@ export class ArticlesTableComponent implements OnInit {
     );
   });
 
-  // ✅ Calcul du temps total
+  // ✅ NOUVEAU: Gestion de l'upload d'image
+  onImageSelected(event: Event, index: number) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage.set('Le fichier doit être une image');
+      return;
+    }
+
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.errorMessage.set('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
+
+    // Créer un aperçu local
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.articles.update(articles => {
+        const updated = [...articles];
+        updated[realIndex].imagePreview = e.target?.result as string;
+        updated[realIndex].imageFile = file;
+        return updated;
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ✅ NOUVEAU: Suppression d'image
+  removeImage(index: number) {
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
+
+    this.articles.update(articles => {
+      const updated = [...articles];
+      updated[realIndex].imagePreview = undefined;
+      updated[realIndex].imageFile = undefined;
+      updated[realIndex].imageFilename = undefined;
+      return updated;
+    });
+  }
+
+  // ✅ NOUVEAU: Obtenir l'URL de l'image
+  getImageUrl(filename: string): string {
+    return this.articleService.getImageUrl(filename);
+  }
+
   calculateTotalTime(processes: ProcessDetail[]): number {
     return processes.reduce((sum, p) => sum + (p.tempsParPF || 0), 0);
   }
 
-  // ✅ Calcul du goulot (minimum cadence)
   calculateBottleneck(processes: ProcessDetail[]): number | null {
     if (processes.length === 0) return null;
     const cadences = processes.map(p => p.cadenceMax).filter(c => c > 0);
@@ -223,9 +277,24 @@ export class ArticlesTableComponent implements OnInit {
       };
 
       this.articleService.createArticle(request).subscribe({
-        next: () => {
-          this.loadArticles();
-          this.isLoading.set(false);
+        next: (response) => {
+          // ✅ Upload de l'image si présente
+          if (article.imageFile) {
+            this.articleService.uploadImage(response.id, article.imageFile).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.isLoading.set(false);
+              },
+              error: (err) => {
+                console.error('Erreur upload image:', err);
+                this.loadArticles();
+                this.isLoading.set(false);
+              }
+            });
+          } else {
+            this.loadArticles();
+            this.isLoading.set(false);
+          }
         },
         error: (err) => {
           console.error(err);
@@ -251,19 +320,35 @@ export class ArticlesTableComponent implements OnInit {
 
       this.articleService.updateArticle(article.id, request).subscribe({
         next: (response) => {
-          this.articles.update(articles => {
-            const updated = [...articles];
-            updated[realIndex] = {
-              ...response,
-              stock: response.stock || 0,
-              isEditing: false,
-              isNew: false
-            };
-            return updated;
-          });
-          delete this.originalArticles[article.id!];
-          this.editingArticles.delete(article.id!);
-          this.isLoading.set(false);
+          // ✅ Upload de l'image si présente
+          if (article.imageFile) {
+            this.articleService.uploadImage(article.id!, article.imageFile).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.isLoading.set(false);
+              },
+              error: (err) => {
+                console.error('Erreur upload image:', err);
+                this.loadArticles();
+                this.isLoading.set(false);
+              }
+            });
+          } else if (!article.imageFilename && !article.imagePreview) {
+            // Supprimer l'image si elle a été retirée
+            this.articleService.deleteImage(article.id!).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.isLoading.set(false);
+              },
+              error: () => {
+                this.loadArticles();
+                this.isLoading.set(false);
+              }
+            });
+          } else {
+            this.loadArticles();
+            this.isLoading.set(false);
+          }
         },
         error: (err) => {
           console.error(err);

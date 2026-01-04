@@ -30,143 +30,194 @@
         [class.editing-block]="article.isEditing"
       >
         <!-- En-tête des colonnes principales -->
-        <table class="article-main-table">
-          <thead>
-            <tr>
-              <th>Ref</th>
-              <th>Article</th>
-              <th>Famille</th>
-              <th>Sous Famille</th>
-              <th>Type de Process</th>
-              <th>Type de Produit</th>
-              <th>PU</th>
-              <th>MPQ</th>
-              <th>Stock</th>
-              <th>Clients</th>
-              <th>Date de création</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <!-- Ref -->
-              <td>
-                <input
-                  type="text"
-                  [(ngModel)]="article.ref"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="Ref">
-              </td>
+        <!-- Remplacer le <table class="article-main-table"> par celui-ci -->
+<table class="article-main-table">
+  <thead>
+    <tr>
+      <th>Image</th> <!-- ✅ NOUVELLE COLONNE -->
+      <th>Ref</th>
+      <th>Article</th>
+      <th>Famille</th>
+      <th>Sous Famille</th>
+      <th>Type de Process</th>
+      <th>Type de Produit</th>
+      <th>PU</th>
+      <th>MPQ</th>
+      <th>Stock</th>
+      <th>Clients</th>
+      <th>Date de création</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <!-- ✅ NOUVELLE COLONNE IMAGE -->
+      <td class="image-cell">
+        <!-- Affichage de l'image -->
+        <div class="image-container" *ngIf="article.imagePreview || article.imageFilename">
+          <img
+            [src]="article.imagePreview || getImageUrl(article.imageFilename!)"
+            alt="Image de l'article"
+            class="article-image">
+          <button
+            *ngIf="article.isEditing"
+            type="button"
+            class="remove-image-btn"
+            (click)="removeImage(i)"
+            title="Supprimer l'image">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
 
-              <!-- Article -->
-              <td>
-                <input
-                  type="text"
-                  [(ngModel)]="article.article"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="Article">
-              </td>
+        <!-- Upload d'image en mode édition -->
+        <div class="upload-container" *ngIf="article.isEditing && !article.imagePreview && !article.imageFilename">
+          <label class="upload-label">
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onImageSelected($event, i)"
+              class="upload-input">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Ajouter une image</span>
+          </label>
+        </div>
 
-              <!-- Famille -->
-              <td>
-                <input
-                  type="text"
-                  [(ngModel)]="article.famille"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="Famille">
-              </td>
+        <!-- Placeholder quand pas d'image et pas en édition -->
+        <div class="no-image" *ngIf="!article.isEditing && !article.imageFilename">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+      </td>
 
-              <!-- Sous Famille -->
-              <td>
-                <input
-                  type="text"
-                  [(ngModel)]="article.sousFamille"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="Sous Famille">
-              </td>
+      <!-- Ref -->
+      <td>
+        <input
+          type="text"
+          [(ngModel)]="article.ref"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="Ref">
+      </td>
 
-              <!-- Type Process -->
-              <td class="type-process-cell">
-                <select
-                  [(ngModel)]="article.typeProcess"
-                  [disabled]="!article.isEditing"
-                  class="table-select type-process-select">
-                  <option value="">Sélectionner</option>
-                  <option value="Seulement Annexe">Seulement Annexe</option>
-                  <option value="Seulement Usine">Seulement Usine</option>
-                  <option value="Annexe + Usine">Annexe + Usine</option>
-                </select>
-              </td>
+      <!-- Article -->
+      <td>
+        <input
+          type="text"
+          [(ngModel)]="article.article"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="Article">
+      </td>
 
-              <!-- Type Produit -->
-              <td>
-                <select
-                  [(ngModel)]="article.typeProduit"
-                  [disabled]="!article.isEditing"
-                  class="table-select">
-                  <option value="">Sélectionner</option>
-                  <option value="Simple">Simple</option>
-                  <option value="Composé">Composé</option>
-                </select>
-              </td>
+      <!-- ... reste des colonnes inchangé ... -->
+      <!-- Famille -->
+      <td>
+        <input
+          type="text"
+          [(ngModel)]="article.famille"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="Famille">
+      </td>
 
-              <!-- Prix Unitaire -->
-              <td>
-                <input
-                  type="number"
-                  step="0.01"
-                  [(ngModel)]="article.prixUnitaire"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="0.00">
-              </td>
+      <!-- Sous Famille -->
+      <td>
+        <input
+          type="text"
+          [(ngModel)]="article.sousFamille"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="Sous Famille">
+      </td>
 
-              <!-- MPQ -->
-              <td>
-                <input
-                  type="number"
-                  [(ngModel)]="article.mpq"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="0">
-              </td>
+      <!-- Type Process -->
+      <td class="type-process-cell">
+        <select
+          [(ngModel)]="article.typeProcess"
+          [disabled]="!article.isEditing"
+          class="table-select type-process-select">
+          <option value="">Sélectionner</option>
+          <option value="Seulement Annexe">Seulement Annexe</option>
+          <option value="Seulement Usine">Seulement Usine</option>
+          <option value="Annexe + Usine">Annexe + Usine</option>
+        </select>
+      </td>
 
-              <!-- ✅ Stock (NON MODIFIABLE) -->
-              <td class="stock-cell">
-                <span 
-                  class="stock-badge"
-                  [class.stock-high]="article.stock > 100"
-                  [class.stock-medium]="article.stock > 50 && article.stock <= 100"
-                  [class.stock-low]="article.stock <= 50">
-                  {{ article.stock }}
-                </span>
-              </td>
+      <!-- Type Produit -->
+      <td>
+        <select
+          [(ngModel)]="article.typeProduit"
+          [disabled]="!article.isEditing"
+          class="table-select">
+          <option value="">Sélectionner</option>
+          <option value="Simple">Simple</option>
+          <option value="Composé">Composé</option>
+        </select>
+      </td>
 
-              <!-- Clients -->
-              <td class="clients-cell">
-                <app-clients-manager
-                    [clients]="article.clients"
-                    [isEditing]="article.isEditing || false"
-                    [availableClientsList]="availableClients()"
-                    (clientsChange)="updateClients(i, $event)">
-                  </app-clients-manager>
-              </td>
+      <!-- Prix Unitaire -->
+      <td>
+        <input
+          type="number"
+          step="0.01"
+          [(ngModel)]="article.prixUnitaire"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="0.00">
+      </td>
 
-              <!-- Date de création -->
-              <td class="date-cell">
-                <span class="date-display" *ngIf="!article.isNew">
-                  {{ formatDate(article.createdAt) }}
-                </span>
-                <span class="date-display new-article" *ngIf="article.isNew">
-                  Nouveau
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- MPQ -->
+      <td>
+        <input
+          type="number"
+          [(ngModel)]="article.mpq"
+          [disabled]="!article.isEditing"
+          class="table-input"
+          placeholder="0">
+      </td>
+
+      <!-- Stock (NON MODIFIABLE) -->
+      <td class="stock-cell">
+        <span
+          class="stock-badge"
+          [class.stock-high]="article.stock > 100"
+          [class.stock-medium]="article.stock > 50 && article.stock <= 100"
+          [class.stock-low]="article.stock <= 50">
+          {{ article.stock }}
+        </span>
+      </td>
+
+      <!-- Clients -->
+      <td class="clients-cell">
+        <app-clients-manager
+            [clients]="article.clients"
+            [isEditing]="article.isEditing || false"
+            [availableClientsList]="availableClients()"
+            (clientsChange)="updateClients(i, $event)">
+          </app-clients-manager>
+      </td>
+
+      <!-- Date de création -->
+      <td class="date-cell">
+        <span class="date-display" *ngIf="!article.isNew">
+          {{ formatDate(article.createdAt) }}
+        </span>
+        <span class="date-display new-article" *ngIf="article.isNew">
+          Nouveau
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
         <!-- Section Process et Actions en dessous -->
         <div class="article-footer">
