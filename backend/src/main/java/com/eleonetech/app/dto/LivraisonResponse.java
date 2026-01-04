@@ -1,4 +1,3 @@
-// backend/src/main/java/com/eleonetech/app/dto/CommandeResponse.java
 package com.eleonetech.app.dto;
 
 import lombok.AllArgsConstructor;
@@ -10,18 +9,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommandeResponse {
+public class LivraisonResponse {
     private Long id;
+    private String numeroBL;
     private String articleRef;
     private String articleNom;
     private String clientNom;
-    private Integer quantite;
     private String numeroCommandeClient;
-    private String typeCommande;
-    private String dateSouhaitee;
-    private String dateAjout; // createdAt formaté
     private Integer quantiteLivree;
-    private Integer quantiteNonLivree;
+    private String dateLivraison;
     private Boolean isActive;
     private String createdAt;
     private String updatedAt;

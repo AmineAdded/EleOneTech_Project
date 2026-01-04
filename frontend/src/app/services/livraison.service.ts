@@ -1,0 +1,78 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface CreateLivraisonRequest {
+  articleRef: string;
+  clientNom: string;
+  numeroCommandeClient: string;
+  quantiteLivree: number;
+  dateLivraison: string;
+}
+
+export interface UpdateLivraisonRequest {
+  articleRef: string;
+  clientNom: string;
+  numeroCommandeClient: string;
+  quantiteLivree: number;
+  dateLivraison: string;
+}
+
+export interface LivraisonResponse {
+  id: number;
+  numeroBL: string;
+  articleRef: string;
+  articleNom: string;
+  clientNom: string;
+  numeroCommandeClient: string;
+  quantiteLivree: number;
+  dateLivraison: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LivraisonService {
+  private apiUrl = 'http://localhost:8080/api/livraisons';
+
+  constructor(private http: HttpClient) {}
+
+  createLivraison(livraison: CreateLivraisonRequest): Observable<LivraisonResponse> {
+    return this.http.post<LivraisonResponse>(this.apiUrl, livraison);
+  }
+
+  getAllLivraisons(): Observable<LivraisonResponse[]> {
+    return this.http.get<LivraisonResponse[]>(this.apiUrl);
+  }
+
+  getLivraisonById(id: number): Observable<LivraisonResponse> {
+    return this.http.get<LivraisonResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  searchByArticleRef(articleRef: string): Observable<LivraisonResponse[]> {
+    return this.http.get<LivraisonResponse[]>(`${this.apiUrl}/search/article/${articleRef}`);
+  }
+
+  searchByClientNom(clientNom: string): Observable<LivraisonResponse[]> {
+    return this.http.get<LivraisonResponse[]>(`${this.apiUrl}/search/client/${clientNom}`);
+  }
+
+  searchByNumeroCommande(numeroCommande: string): Observable<LivraisonResponse[]> {
+    return this.http.get<LivraisonResponse[]>(`${this.apiUrl}/search/commande/${numeroCommande}`);
+  }
+
+  updateLivraison(id: number, livraison: UpdateLivraisonRequest): Observable<LivraisonResponse> {
+    return this.http.put<LivraisonResponse>(`${this.apiUrl}/${id}`, livraison);
+  }
+
+  deleteLivraison(id: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
+  }
+}

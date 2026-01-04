@@ -8,6 +8,7 @@ import com.eleonetech.app.entity.Commande;
 import com.eleonetech.app.repository.ArticleRepository;
 import com.eleonetech.app.repository.ClientRepository;
 import com.eleonetech.app.repository.CommandeRepository;
+import com.eleonetech.app.repository.LivraisonRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class CommandeService {
     private final CommandeRepository commandeRepository;
     private final ArticleRepository articleRepository;
     private final ClientRepository clientRepository;
+    private final LivraisonRepository livraisonRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -292,6 +294,12 @@ public class CommandeService {
     }
 
     private CommandeResponse mapToResponse(Commande commande) {
+        // Calculer la quantité livrée
+        Integer quantiteLivree = livraisonRepository.sumQuantiteLivreeByCommandeId(commande.getId());
+        if (quantiteLivree == null) quantiteLivree = 0;
+
+        Integer quantiteNonLivree = commande.getQuantite() - quantiteLivree;
+
         return CommandeResponse.builder()
                 .id(commande.getId())
                 .articleRef(commande.getArticle().getRef())
@@ -299,6 +307,8 @@ public class CommandeService {
                 .clientNom(commande.getClient().getNomComplet())
                 .numeroCommandeClient(commande.getNumeroCommandeClient())
                 .quantite(commande.getQuantite())
+                .quantiteLivree(quantiteLivree)  // NOUVEAU
+                .quantiteNonLivree(quantiteNonLivree)  // NOUVEAU
                 .typeCommande(commande.getTypeCommande())
                 .dateSouhaitee(commande.getDateSouhaitee().format(DATE_FORMATTER))
                 .dateAjout(commande.getCreatedAt().toLocalDate().format(DATE_FORMATTER))
