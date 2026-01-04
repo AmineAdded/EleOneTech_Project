@@ -103,7 +103,7 @@
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #9c27b0;
+  border-color: #F06292;
   box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
 }
 
@@ -187,7 +187,7 @@
 }
 
 .livraison-header thead {
-  background: linear-gradient(135deg, #9c27b0, #ba68c8);
+  background: linear-gradient(135deg, #E91E63, #F06292);
 }
 
 .livraison-block {
@@ -205,12 +205,12 @@
 
 .livraison-block:hover {
   background: #fafafa;
-  border-bottom: 2px solid #9c27b0;
+  border-bottom: 2px solid #F06292;
 }
 
 .livraison-block.editing-block {
   background: #f3e5f5;
-  border-bottom: 2px solid #7b1fa2;
+  border-bottom: 2px solid #F06292;
 }
 
 .livraison-main-table {
@@ -220,7 +220,7 @@
 }
 
 .livraison-main-table thead {
-  background: linear-gradient(135deg, #9c27b0, #ba68c8);
+  background: linear-gradient(135deg, #E91E63, #F06292);
   color: white;
 }
 
@@ -326,7 +326,7 @@
 .table-input:focus,
 .table-select:focus {
   outline: none;
-  border-color: #9c27b0;
+  border-color: #F06292;
   box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
 }
 
@@ -345,7 +345,7 @@
 .bl-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
-  background: linear-gradient(135deg, #673ab7, #9575cd);
+  background: linear-gradient(135deg, #E91E63, #F06292);
   color: white;
   border-radius: 6px;
   font-weight: 600;
