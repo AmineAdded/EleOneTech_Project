@@ -266,27 +266,27 @@
 
 .livraison-main-table th:nth-child(2),
 .livraison-main-table td:nth-child(2) {
-  width: 120px;
+  width: 170px;
 }
 
 .livraison-main-table th:nth-child(3),
 .livraison-main-table td:nth-child(3) {
-  width: 200px;
+  width: 300px;
 }
 
 .livraison-main-table th:nth-child(4),
 .livraison-main-table td:nth-child(4) {
-  width: 200px;
+  width: 290px;
 }
 
 .livraison-main-table th:nth-child(5),
 .livraison-main-table td:nth-child(5) {
-  width: 200px;
+  width: 290px;
 }
 
 .livraison-main-table th:nth-child(6),
 .livraison-main-table td:nth-child(6) {
-  width: 150px;
+  width: 250px;
 }
 
 .livraison-main-table th:nth-child(7),
