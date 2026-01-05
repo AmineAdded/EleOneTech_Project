@@ -22,13 +22,14 @@ export interface UpdateCommandeRequest {
 }
 
 export interface CommandeResponse {
-  quantiteNonLivree: number;
   id: number;
   articleRef: string;
   articleNom: string;
   numeroCommandeClient: string;  // NOUVEAU
   clientNom: string;
-  quantite: number;
+   quantite: number;              // ✅ Quantité initiale
+  quantiteLivree: number;        // ✅ Quantité livrée
+  quantiteNonLivree: number; 
   typeCommande: string;   
   dateSouhaitee: string;
   dateAjout: string;

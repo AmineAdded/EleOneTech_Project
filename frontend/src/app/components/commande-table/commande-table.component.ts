@@ -418,27 +418,28 @@ export class CommandeTableComponent implements OnInit {
   }
 
   addNewRow() {
-    const today = new Date().toISOString().split('T')[0];
-    const newCommande: CommandeTable = {
-      id: 0 as any,
-      articleRef: '',
-      articleNom: '',
-      numeroCommandeClient: '',
-      clientNom: '',
-      quantite: 1,
-      typeCommande: 'PLANIFIEE',
-      dateSouhaitee: today,
-      dateAjout: today,
-      isActive: true,
-      createdAt: '',
-      updatedAt: '',
-      isEditing: true,
-      isNew: true,
-      quantiteNonLivree: 0
-    };
+  const today = new Date().toISOString().split('T')[0];
+  const newCommande: CommandeTable = {
+    id: 0 as any,
+    articleRef: '',
+    articleNom: '',
+    numeroCommandeClient: '',
+    clientNom: '',
+    quantite: 1,
+    typeCommande: 'PLANIFIEE',
+    dateSouhaitee: today,
+    dateAjout: today,
+    isActive: true,
+    createdAt: '',
+    updatedAt: '',
+    isEditing: true,
+    isNew: true,
+    quantiteLivree: 0,      // ✅ Ajouté
+    quantiteNonLivree: 0    // ✅ Ajouté
+  };
 
-    this.commandes.update((commandes) => [newCommande, ...commandes]);
-  }
+  this.commandes.update((commandes) => [newCommande, ...commandes]);
+}
 
   editRow(index: number) {
     const cmd = this.commandes()[index];

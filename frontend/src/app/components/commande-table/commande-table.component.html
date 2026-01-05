@@ -355,14 +355,31 @@
 
               <!-- Quantité -->
               <td>
-                <input
-                  type="number"
-                  [(ngModel)]="cmd.quantite"
-                  [disabled]="!isEditing(cmd)"
-                  class="table-input"
-                  min="1"
-                  placeholder="0"
-                />
+                <div *ngIf="isEditing(cmd)" class="quantity-group">
+                  <input
+                    type="number"
+                    [(ngModel)]="cmd.quantite"
+                    class="table-input"
+                    min="1"
+                    placeholder="0"
+                  />
+                </div>
+                <div *ngIf="!isEditing(cmd)" class="quantity-display">
+                  <div class="quantity-row">
+                    <span class="quantity-label">Total:</span>
+                    <span class="quantity-value total">{{ cmd.quantite }}</span>
+                  </div>
+                  <div class="quantity-row">
+                    <span class="quantity-label">Livrée:</span>
+                    <span class="quantity-value delivered">{{ cmd.quantiteLivree || 0 }}</span>
+                  </div>
+                  <div class="quantity-row">
+                    <span class="quantity-label">Restante:</span>
+                    <span class="quantity-value remaining">{{
+                      cmd.quantiteNonLivree || cmd.quantite
+                    }}</span>
+                  </div>
+                </div>
               </td>
 
               <!-- Type de Commande -->

@@ -56,7 +56,7 @@
   border-radius: 8px;
   border: 1.5px solid #ddd;
   font-size: 0.9rem;
-  min-width: 380px; /* Augmenté de 280px à 380px */
+  min-width: 380px;
   transition: all 0.3s ease;
 }
 
@@ -264,6 +264,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
+  overflow-x: auto;
 }
 
 .commande-grid {
@@ -317,6 +318,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  min-width: 1600px; /* ✅ Ajout d'une largeur minimale */
 }
 
 .commande-main-table thead {
@@ -358,33 +360,60 @@
   stroke-width: 2;
 }
 
-/* ✅ Largeurs des colonnes */
+/* ✅ LARGEURS DES COLONNES CORRIGÉES */
 .commande-main-table th:nth-child(1),
-.commande-main-table td:nth-child(1) { width: 120px; }
+.commande-main-table td:nth-child(1) { 
+  width: 100px;
+  min-width: 100px;
+}
 
 .commande-main-table th:nth-child(2),
-.commande-main-table td:nth-child(2) { width: 250px; }
+.commande-main-table td:nth-child(2) { 
+  width: 200px;
+  min-width: 200px;
+}
 
 .commande-main-table th:nth-child(3),
-.commande-main-table td:nth-child(3) { width: 200px; } /* N° Commande */
+.commande-main-table td:nth-child(3) { 
+  width: 180px;
+  min-width: 180px;
+}
 
 .commande-main-table th:nth-child(4),
-.commande-main-table td:nth-child(4) { width: 390px; }
+.commande-main-table td:nth-child(4) { 
+  width: 250px;
+  min-width: 250px;
+}
 
 .commande-main-table th:nth-child(5),
-.commande-main-table td:nth-child(5) { width: 200px; }
+.commande-main-table td:nth-child(5) { 
+  width: 180px;
+  min-width: 180px;
+}
 
 .commande-main-table th:nth-child(6),
-.commande-main-table td:nth-child(6) { width: 120px; } /* Type */
+.commande-main-table td:nth-child(6) { 
+  width: 120px;
+  min-width: 120px;
+}
 
 .commande-main-table th:nth-child(7),
-.commande-main-table td:nth-child(7) { width: 150px; }
+.commande-main-table td:nth-child(7) { 
+  width: 140px;
+  min-width: 140px;
+}
 
 .commande-main-table th:nth-child(8),
-.commande-main-table td:nth-child(8) { width: 150px; }
+.commande-main-table td:nth-child(8) { 
+  width: 140px;
+  min-width: 140px;
+}
 
 .commande-main-table th:nth-child(9),
-.commande-main-table td:nth-child(9) { width: 180px; }
+.commande-main-table td:nth-child(9) { 
+  width: 160px;
+  min-width: 160px;
+}
 
 .commande-main-table tbody tr {
   background: white;
@@ -428,12 +457,80 @@
   text-align: right;
 }
 
+/* ✅ STYLES POUR L'AFFICHAGE DE LA QUANTITÉ */
+.quantity-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #fafafa, #ffffff);
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  min-width: 150px;
+}
+
+.quantity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 60px;
+}
+
+.quantity-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.quantity-value.total {
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  color: #1976D2;
+}
+
+.quantity-value.delivered {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  color: #2E7D32;
+}
+
+.quantity-value.remaining {
+  background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+  color: #E65100;
+}
+
+/* ✅ Groupe quantité pour le mode édition */
+.quantity-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-hint {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .date-display {
   display: inline-block;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .date-display.date-souhaitee {
@@ -450,6 +547,7 @@
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+  flex-wrap: nowrap;
 }
 
 .edit-btn,
@@ -466,6 +564,7 @@
   justify-content: center;
   min-width: 40px;
   min-height: 40px;
+  flex-shrink: 0;
 }
 
 .edit-btn {
@@ -545,6 +644,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .type-badge.type-ferme {
@@ -614,11 +714,6 @@
 
   .table-wrapper {
     padding: 1rem;
-  }
-
-  .commande-main-table {
-    display: block;
-    overflow-x: auto;
   }
 
   .summary-stats {
