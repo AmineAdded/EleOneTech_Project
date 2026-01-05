@@ -296,7 +296,7 @@
   border: none;
   border-bottom: 2px solid #E0E0E0;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s ease;
 }
 
@@ -318,7 +318,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
-  min-width: 1600px; /* ✅ Ajout d'une largeur minimale */
+  table-layout: fixed;        /* ← ICI */
+  min-width: max-content;  
 }
 
 .commande-main-table thead {
@@ -333,6 +334,7 @@
   white-space: nowrap;
   font-size: 0.85rem;
   position: relative;
+  overflow: visible; 
 }
 
 /* ✅ STYLES DES BOUTONS DE TRI */
@@ -360,11 +362,11 @@
   stroke-width: 2;
 }
 
-/* ✅ LARGEURS DES COLONNES CORRIGÉES */
+/* ✅ LARGEURS DES COLONNES OPTIMISÉES POUR VISIBILITÉ */
 .commande-main-table th:nth-child(1),
 .commande-main-table td:nth-child(1) { 
-  width: 100px;
-  min-width: 100px;
+  width: 120px;
+  min-width: 120px;
 }
 
 .commande-main-table th:nth-child(2),
@@ -381,8 +383,8 @@
 
 .commande-main-table th:nth-child(4),
 .commande-main-table td:nth-child(4) { 
-  width: 250px;
-  min-width: 250px;
+  width: 220px;
+  min-width: 220px;
 }
 
 .commande-main-table th:nth-child(5),
@@ -399,20 +401,20 @@
 
 .commande-main-table th:nth-child(7),
 .commande-main-table td:nth-child(7) { 
-  width: 140px;
-  min-width: 140px;
+  width: 160px;
+  min-width: 160px;
 }
 
 .commande-main-table th:nth-child(8),
 .commande-main-table td:nth-child(8) { 
-  width: 140px;
-  min-width: 140px;
+  width: 160px;
+  min-width: 160px;
 }
 
 .commande-main-table th:nth-child(9),
 .commande-main-table td:nth-child(9) { 
-  width: 160px;
-  min-width: 160px;
+  width: 180px;
+  min-width: 180px;
 }
 
 .commande-main-table tbody tr {
@@ -422,6 +424,7 @@
 .commande-main-table td {
   padding: 0.75rem 1rem;
   vertical-align: middle;
+  overflow: visible; 
 }
 
 .actions-cell {
