@@ -9,9 +9,6 @@ import {
   UpdateClientRequest
 } from '../../services/client.service';
 
-/**
- * Type FRONTEND (UI)
- */
 interface ClientTable extends ClientResponse {
   isEditing?: boolean;
   isNew?: boolean;
@@ -28,6 +25,15 @@ export class ClientsTableComponent implements OnInit {
 
   clients = signal<ClientTable[]>([]);
   searchTerm = signal('');
+  
+  // ✅ NOUVEAU: Filtres avancés
+  searchNomComplet = signal('');
+  searchModeTransport = signal('');
+  searchIncoTerme = signal('');
+  
+  // ✅ NOUVEAU: Listes déroulantes depuis la base
+  availableNomComplets = signal<string[]>([]);
+  
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -42,11 +48,21 @@ export class ClientsTableComponent implements OnInit {
 
   ngOnInit() {
     this.loadClients();
+    this.loadDistinctNomComplets();
   }
 
-  // =========================
-  // LOAD
-  // =========================
+  // ✅ NOUVEAU: Charger les noms distincts
+  loadDistinctNomComplets() {
+    this.clientService.getDistinctNomComplets().subscribe({
+      next: (noms) => {
+        this.availableNomComplets.set(noms);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des noms:', error);
+      }
+    });
+  }
+
   loadClients() {
     this.isLoading.set(true);
     this.clientService.getAllClients().subscribe({
@@ -67,9 +83,63 @@ export class ClientsTableComponent implements OnInit {
     });
   }
 
-  // =========================
-  // SEARCH
-  // =========================
+  // ✅ NOUVEAU: Recherche avancée
+  performSearch() {
+    const nomComplet = this.searchNomComplet();
+    const modeTransport = this.searchModeTransport();
+    const incoTerme = this.searchIncoTerme();
+
+    if (!nomComplet && !modeTransport && !incoTerme) {
+      this.loadClients();
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    // Priorité: Nom > Mode Transport > Incoterm
+    if (nomComplet) {
+      this.clientService.searchByNomComplet(nomComplet).subscribe({
+        next: (clients) => this.updateClients(clients),
+        error: (error) => this.handleSearchError(error)
+      });
+    } else if (modeTransport) {
+      this.clientService.searchByModeTransport(modeTransport).subscribe({
+        next: (clients) => this.updateClients(clients),
+        error: (error) => this.handleSearchError(error)
+      });
+    } else if (incoTerme) {
+      this.clientService.searchByIncoTerme(incoTerme).subscribe({
+        next: (clients) => this.updateClients(clients),
+        error: (error) => this.handleSearchError(error)
+      });
+    }
+  }
+
+  private updateClients(clients: ClientResponse[]) {
+    const mapped: ClientTable[] = clients.map(c => ({
+      ...c,
+      isEditing: false,
+      isNew: false
+    }));
+    this.clients.set(mapped);
+    this.isLoading.set(false);
+  }
+
+  private handleSearchError(error: any) {
+    console.error(error);
+    this.errorMessage.set('Erreur lors de la recherche');
+    this.isLoading.set(false);
+  }
+
+  // ✅ NOUVEAU: Réinitialiser les filtres
+  resetFilters() {
+    this.searchTerm.set('');
+    this.searchNomComplet.set('');
+    this.searchModeTransport.set('');
+    this.searchIncoTerme.set('');
+    this.loadClients();
+  }
+
   filteredClients = computed(() => {
     const term = this.searchTerm().toLowerCase();
     if (!term) return this.clients();
@@ -85,9 +155,6 @@ export class ClientsTableComponent implements OnInit {
     );
   });
 
-  // =========================
-  // ADD
-  // =========================
   addNewRow() {
     const newClient: ClientTable = {
       id: 0 as any,
@@ -108,9 +175,6 @@ export class ClientsTableComponent implements OnInit {
     this.clients.update(clients => [newClient, ...clients]);
   }
 
-  // =========================
-  // EDIT
-  // =========================
   editRow(index: number) {
     const client = this.clients()[index];
 
@@ -126,83 +190,74 @@ export class ClientsTableComponent implements OnInit {
     });
   }
 
-  // =========================
-  // SAVE
-  // =========================
   saveRow(index: number) {
-  const client = this.clients()[index];
+    const client = this.clients()[index];
 
-  if (!client.nomComplet?.trim()) {
-    this.errorMessage.set('Le nom complet est obligatoire');
-    return;
+    if (!client.nomComplet?.trim()) {
+      this.errorMessage.set('Le nom complet est obligatoire');
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    if (client.isNew) {
+      const request: CreateClientRequest = {
+        ref: client.ref?.trim() || null,
+        nomComplet: client.nomComplet.trim(),
+        adresseLivraison: client.adresseLivraison,
+        adresseFacturation: client.adresseFacturation,
+        devise: client.devise,
+        modeTransport: client.modeTransport,
+        incoTerme: client.incoTerme
+      };
+
+      this.clientService.createClient(request).subscribe({
+        next: () => {
+          this.loadClients();
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
+          this.isLoading.set(false);
+        }
+      });
+
+    } else {
+      const request: UpdateClientRequest = {
+        ref: client.ref?.trim() || null,
+        nomComplet: client.nomComplet.trim(),
+        adresseLivraison: client.adresseLivraison,
+        adresseFacturation: client.adresseFacturation,
+        devise: client.devise,
+        modeTransport: client.modeTransport,
+        incoTerme: client.incoTerme
+      };
+
+      this.clientService.updateClient(client.id, request).subscribe({
+        next: (response) => {
+          this.clients.update(clients => {
+            const updated = [...clients];
+            updated[index] = {
+              ...response,
+              isEditing: false,
+              isNew: false
+            };
+            return updated;
+          });
+          delete this.originalClients[client.id];
+          this.editingClients.delete(client.id);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
+          this.isLoading.set(false);
+        }
+      });
+    }
   }
 
-  this.isLoading.set(true);
-
-  // ---------- CREATE ----------
-  if (client.isNew) {
-    const request: CreateClientRequest = {
-      ref: client.ref?.trim() || null, // ✅ NULL au lieu de ""
-      nomComplet: client.nomComplet.trim(),
-      adresseLivraison: client.adresseLivraison,
-      adresseFacturation: client.adresseFacturation,
-      devise: client.devise,
-      modeTransport: client.modeTransport,
-      incoTerme: client.incoTerme
-    };
-
-    this.clientService.createClient(request).subscribe({
-      next: () => {
-        this.loadClients();
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
-    });
-
-  // ---------- UPDATE ----------
-  } else {
-    const request: UpdateClientRequest = {
-      ref: client.ref?.trim() || null, // ✅ NULL au lieu de ""
-      nomComplet: client.nomComplet.trim(),
-      adresseLivraison: client.adresseLivraison,
-      adresseFacturation: client.adresseFacturation,
-      devise: client.devise,
-      modeTransport: client.modeTransport,
-      incoTerme: client.incoTerme
-    };
-
-    this.clientService.updateClient(client.id, request).subscribe({
-      next: (response) => {
-        this.clients.update(clients => {
-          const updated = [...clients];
-          updated[index] = {
-            ...response,
-            isEditing: false,
-            isNew: false
-          };
-          return updated;
-        });
-        delete this.originalClients[client.id];
-        this.editingClients.delete(client.id);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
-    });
-  }
-}
-
-
-  // =========================
-  // CANCEL
-  // =========================
   cancelEdit(index: number) {
     const client = this.clients()[index];
 
@@ -223,9 +278,6 @@ export class ClientsTableComponent implements OnInit {
     }
   }
 
-  // =========================
-  // DELETE
-  // =========================
   deleteRow(index: number) {
     const client = this.clients()[index];
 

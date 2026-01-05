@@ -118,6 +118,15 @@ public class ProcessService {
         processRepository.deleteById(id);
         log.info("Process supprimé: {} (Ref: {})", process.getNom(), process.getRef());
     }
+    public List<ProcessResponse> searchByNom(String nom) {
+        return processRepository.findByNomContaining(nom)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+    public List<String> getDistinctNoms() {
+        return processRepository.findDistinctNoms();
+    }
 
     private ProcessResponse mapToResponse(Process process) {
         return ProcessResponse.builder()

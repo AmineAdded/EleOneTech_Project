@@ -153,4 +153,65 @@ public class ArticleController {
                     .body(new MessageResponse(e.getMessage()));
         }
     }
+
+
+    @GetMapping("/distinct-refs")
+    public ResponseEntity<List<String>> getDistinctRefs() {
+        List<String> refs = articleService.getDistinctRefs();
+        return ResponseEntity.ok(refs);
+    }
+
+    @GetMapping("/distinct-noms")
+    public ResponseEntity<List<String>> getDistinctNoms() {
+        List<String> noms = articleService.getDistinctNoms();
+        return ResponseEntity.ok(noms);
+    }
+
+    @GetMapping("/distinct-familles")
+    public ResponseEntity<List<String>> getDistinctFamilles() {
+        List<String> familles = articleService.getDistinctFamilles();
+        return ResponseEntity.ok(familles);
+    }
+
+    @GetMapping("/distinct-type-produits")
+    public ResponseEntity<List<String>> getDistinctTypeProduits() {
+        List<String> types = articleService.getDistinctTypeProduits();
+        return ResponseEntity.ok(types);
+    }
+
+    @GetMapping("/distinct-type-process")
+    public ResponseEntity<List<String>> getDistinctTypeProcess() {
+        List<String> types = articleService.getDistinctTypeProcess();
+        return ResponseEntity.ok(types);
+    }
+
+    @GetMapping("/search/ref/{ref}")
+    public ResponseEntity<List<ArticleResponse>> searchByRef(@PathVariable String ref) {
+        List<ArticleResponse> articles = articleService.searchByRef(ref);
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search/nom/{nom}")
+    public ResponseEntity<List<ArticleResponse>> searchByNom(@PathVariable String nom) {
+        List<ArticleResponse> articles = articleService.searchByNom(nom);
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search/famille/{famille}")
+    public ResponseEntity<List<ArticleResponse>> searchByFamille(@PathVariable String famille) {
+        List<ArticleResponse> articles = articleService.searchByFamille(famille);
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search/type-produit/{typeProduit}")
+    public ResponseEntity<List<ArticleResponse>> searchByTypeProduit(@PathVariable String typeProduit) {
+        List<ArticleResponse> articles = articleService.searchByTypeProduit(typeProduit);
+        return ResponseEntity.ok(articles);
+    }
+
+    @GetMapping("/search/type-process/{typeProcess}")
+    public ResponseEntity<List<ArticleResponse>> searchByTypeProcess(@PathVariable String typeProcess) {
+        List<ArticleResponse> articles = articleService.searchByTypeProcess(typeProcess);
+        return ResponseEntity.ok(articles);
+    }
 }

@@ -18,9 +18,9 @@ interface Article {
   prixUnitaire: number;
   mpq: number;
   stock: number;
-  imageFilename?: string; // ✅ NOUVEAU
-  imagePreview?: string; // ✅ NOUVEAU: pour l'aperçu local
-  imageFile?: File; // ✅ NOUVEAU: fichier en attente d'upload
+  imageFilename?: string;
+  imagePreview?: string;
+  imageFile?: File;
   processes: ProcessDetail[];
   clients: string[];
   createdAt?: string;
@@ -39,6 +39,21 @@ export class ArticlesTableComponent implements OnInit {
   articles = signal<Article[]>([]);
   availableClients = signal<string[]>([]);
   searchTerm = signal('');
+  
+  // ✅ NOUVEAU: Filtres avancés
+  searchRef = signal('');
+  searchNom = signal('');
+  searchFamille = signal('');
+  searchTypeProduit = signal('');
+  searchTypeProcess = signal('');
+  
+  // ✅ NOUVEAU: Listes déroulantes depuis la base
+  availableRefs = signal<string[]>([]);
+  availableNoms = signal<string[]>([]);
+  availableFamilles = signal<string[]>([]);
+  availableTypeProduits = signal<string[]>([]);
+  availableTypeProcess = signal<string[]>([]);
+  
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -53,6 +68,7 @@ export class ArticlesTableComponent implements OnInit {
   ngOnInit() {
     this.loadClients();
     this.loadArticles();
+    this.loadDistinctValues();
   }
 
   loadClients() {
@@ -71,6 +87,34 @@ export class ArticlesTableComponent implements OnInit {
     });
   }
 
+  // ✅ NOUVEAU: Charger les valeurs distinctes pour les listes déroulantes
+  loadDistinctValues() {
+    this.articleService.getDistinctRefs().subscribe({
+      next: (refs) => this.availableRefs.set(refs),
+      error: (error) => console.error('Erreur refs:', error)
+    });
+
+    this.articleService.getDistinctNoms().subscribe({
+      next: (noms) => this.availableNoms.set(noms),
+      error: (error) => console.error('Erreur noms:', error)
+    });
+
+    this.articleService.getDistinctFamilles().subscribe({
+      next: (familles) => this.availableFamilles.set(familles),
+      error: (error) => console.error('Erreur familles:', error)
+    });
+
+    this.articleService.getDistinctTypeProduits().subscribe({
+      next: (types) => this.availableTypeProduits.set(types),
+      error: (error) => console.error('Erreur types produits:', error)
+    });
+
+    this.articleService.getDistinctTypeProcess().subscribe({
+      next: (types) => this.availableTypeProcess.set(types),
+      error: (error) => console.error('Erreur types process:', error)
+    });
+  }
+
   loadArticles() {
     this.isLoading.set(true);
     this.articleService.getAllArticles().subscribe({
@@ -86,7 +130,7 @@ export class ArticlesTableComponent implements OnInit {
           prixUnitaire: a.prixUnitaire || 0,
           mpq: a.mpq || 0,
           stock: a.stock || 0,
-          imageFilename: a.imageFilename, // ✅ NOUVEAU
+          imageFilename: a.imageFilename,
           processes: a.processes || [],
           clients: a.clients || [],
           createdAt: a.createdAt,
@@ -109,6 +153,78 @@ export class ArticlesTableComponent implements OnInit {
     });
   }
 
+  // ✅ NOUVEAU: Recherche avancée
+  performSearch() {
+    const ref = this.searchRef();
+    const nom = this.searchNom();
+    const famille = this.searchFamille();
+    const typeProduit = this.searchTypeProduit();
+    const typeProcess = this.searchTypeProcess();
+
+    if (!ref && !nom && !famille && !typeProduit && !typeProcess) {
+      this.loadArticles();
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    // Priorité: Ref > Nom > Famille > Type Produit > Type Process
+    let searchObservable;
+    
+    if (ref) {
+      searchObservable = this.articleService.searchByRef(ref);
+    } else if (nom) {
+      searchObservable = this.articleService.searchByNom(nom);
+    } else if (famille) {
+      searchObservable = this.articleService.searchByFamille(famille);
+    } else if (typeProduit) {
+      searchObservable = this.articleService.searchByTypeProduit(typeProduit);
+    } else {
+      searchObservable = this.articleService.searchByTypeProcess(typeProcess);
+    }
+
+    searchObservable.subscribe({
+      next: (articles) => {
+        const mapped: Article[] = articles.map(a => ({
+          id: a.id,
+          ref: a.ref,
+          article: a.article,
+          famille: a.famille || '',
+          sousFamille: a.sousFamille || '',
+          typeProcess: a.typeProcess || '',
+          typeProduit: a.typeProduit || '',
+          prixUnitaire: a.prixUnitaire || 0,
+          mpq: a.mpq || 0,
+          stock: a.stock || 0,
+          imageFilename: a.imageFilename,
+          processes: a.processes || [],
+          clients: a.clients || [],
+          createdAt: a.createdAt,
+          isEditing: false,
+          isNew: false
+        }));
+        this.articles.set(mapped);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage.set('Erreur lors de la recherche');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // ✅ NOUVEAU: Réinitialiser les filtres
+  resetFilters() {
+    this.searchTerm.set('');
+    this.searchRef.set('');
+    this.searchNom.set('');
+    this.searchFamille.set('');
+    this.searchTypeProduit.set('');
+    this.searchTypeProcess.set('');
+    this.loadArticles();
+  }
+
   filteredArticles = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.articles();
@@ -126,20 +242,17 @@ export class ArticlesTableComponent implements OnInit {
     );
   });
 
-  // ✅ NOUVEAU: Gestion de l'upload d'image
   onImageSelected(event: Event, index: number) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
     const file = input.files[0];
 
-    // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
       this.errorMessage.set('Le fichier doit être une image');
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       this.errorMessage.set('L\'image ne doit pas dépasser 5MB');
       return;
@@ -148,7 +261,6 @@ export class ArticlesTableComponent implements OnInit {
     const article = this.filteredArticles()[index];
     const realIndex = this.articles().findIndex(a => a.id === article.id);
 
-    // Créer un aperçu local
     const reader = new FileReader();
     reader.onload = (e) => {
       this.articles.update(articles => {
@@ -161,7 +273,6 @@ export class ArticlesTableComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
-  // ✅ NOUVEAU: Suppression d'image
   removeImage(index: number) {
     const article = this.filteredArticles()[index];
     const realIndex = this.articles().findIndex(a => a.id === article.id);
@@ -175,7 +286,6 @@ export class ArticlesTableComponent implements OnInit {
     });
   }
 
-  // ✅ NOUVEAU: Obtenir l'URL de l'image
   getImageUrl(filename: string): string {
     return this.articleService.getImageUrl(filename);
   }
@@ -245,141 +355,121 @@ export class ArticlesTableComponent implements OnInit {
   }
 
   saveRow(index: number) {
-  const article = this.filteredArticles()[index];
-  const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const article = this.filteredArticles()[index];
+    const realIndex = this.articles().findIndex(a => a.id === article.id);
 
-  if (!article.ref?.trim()) {
-    this.errorMessage.set('La référence est obligatoire');
-    return;
-  }
+    if (!article.ref?.trim()) {
+      this.errorMessage.set('La référence est obligatoire');
+      return;
+    }
 
-  if (!article.article?.trim()) {
-    this.errorMessage.set('Le nom de l\'article est obligatoire');
-    return;
-  }
+    if (!article.article?.trim()) {
+      this.errorMessage.set('Le nom de l\'article est obligatoire');
+      return;
+    }
 
-  this.isLoading.set(true);
-  this.errorMessage.set('');
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-  if (article.isNew) {
-    // CRÉATION
-    const request: CreateArticleRequest = {
-      ref: article.ref,
-      article: article.article,
-      famille: article.famille || '',
-      sousFamille: article.sousFamille || '',
-      typeProcess: article.typeProcess || '',
-      typeProduit: article.typeProduit || '',
-      prixUnitaire: article.prixUnitaire || 0,
-      mpq: article.mpq || 0,
-      stock: article.stock || 0,
-      clients: article.clients || [],
-      processes: article.processes || []
-    };
+    if (article.isNew) {
+      const request: CreateArticleRequest = {
+        ref: article.ref,
+        article: article.article,
+        famille: article.famille || '',
+        sousFamille: article.sousFamille || '',
+        typeProcess: article.typeProcess || '',
+        typeProduit: article.typeProduit || '',
+        prixUnitaire: article.prixUnitaire || 0,
+        mpq: article.mpq || 0,
+        stock: article.stock || 0,
+        clients: article.clients || [],
+        processes: article.processes || []
+      };
 
-    this.articleService.createArticle(request).subscribe({
-      next: (response) => {
-        console.log('✅ Article créé:', response);
-
-        if (article.imageFile) {
-          console.log('📤 Upload de l\'image pour article ID:', response.id);
-          console.log('📄 Fichier:', article.imageFile.name, article.imageFile.size, 'bytes');
-
-          this.articleService.uploadImage(response.id, article.imageFile).subscribe({
-            next: (updatedResponse) => {
-              console.log('✅ Image uploadée:', updatedResponse.imageFilename);
-              this.loadArticles();
-              this.isLoading.set(false);
-            },
-            error: (err) => {
-              console.error('❌ Erreur upload image:', err);
-              console.error('❌ Détails erreur:', {
-                status: err.status,
-                message: err.message,
-                error: err.error
-              });
-              this.errorMessage.set('Article créé mais erreur lors de l\'upload de l\'image: ' + (err.error?.message || err.message));
-              this.loadArticles();
-              this.isLoading.set(false);
-            }
-          });
-        } else {
-          console.log('ℹ️ Pas d\'image à uploader');
-          this.loadArticles();
+      this.articleService.createArticle(request).subscribe({
+        next: (response) => {
+          if (article.imageFile) {
+            this.articleService.uploadImage(response.id, article.imageFile).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              },
+              error: (err) => {
+                this.errorMessage.set('Article créé mais erreur lors de l\'upload de l\'image');
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              }
+            });
+          } else {
+            this.loadArticles();
+            this.loadDistinctValues();
+            this.isLoading.set(false);
+          }
+        },
+        error: (err) => {
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
           this.isLoading.set(false);
         }
-      },
-      error: (err) => {
-        console.error('❌ Erreur création article:', err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
-    });
+      });
 
-  } else if (article.id) {
-    // MISE À JOUR D'UN ARTICLE EXISTANT
-    const request: UpdateArticleRequest = {
-      ref: article.ref,
-      article: article.article,
-      famille: article.famille || '',
-      sousFamille: article.sousFamille || '',
-      typeProcess: article.typeProcess || '',
-      typeProduit: article.typeProduit || '',
-      prixUnitaire: article.prixUnitaire || 0,
-      mpq: article.mpq || 0,
-      stock: article.stock || 0,
-      clients: article.clients || [],
-      processes: article.processes || []
-    };
+    } else if (article.id) {
+      const request: UpdateArticleRequest = {
+        ref: article.ref,
+        article: article.article,
+        famille: article.famille || '',
+        sousFamille: article.sousFamille || '',
+        typeProcess: article.typeProcess || '',
+        typeProduit: article.typeProduit || '',
+        prixUnitaire: article.prixUnitaire || 0,
+        mpq: article.mpq || 0,
+        stock: article.stock || 0,
+        clients: article.clients || [],
+        processes: article.processes || []
+      };
 
-    this.articleService.updateArticle(article.id, request).subscribe({
-      next: (response) => {
-        console.log('✅ Article mis à jour:', response);
-
-        // Gérer l'image
-        if (article.imageFile) {
-          // Nouvelle image à uploader
-          console.log('📤 Upload de la nouvelle image...');
-          this.articleService.uploadImage(article.id!, article.imageFile).subscribe({
-            next: () => {
-              console.log('✅ Image uploadée');
-              this.loadArticles();
-              this.isLoading.set(false);
-            },
-            error: (err) => {
-              console.error('❌ Erreur upload image:', err);
-              this.loadArticles();
-              this.isLoading.set(false);
-            }
-          });
-        } else if (!article.imagePreview && !article.imageFilename) {
-          // L'image a été supprimée
-          console.log('🗑️ Suppression de l\'image...');
-          this.articleService.deleteImage(article.id!).subscribe({
-            next: () => {
-              console.log('✅ Image supprimée');
-              this.loadArticles();
-              this.isLoading.set(false);
-            },
-            error: () => {
-              this.loadArticles();
-              this.isLoading.set(false);
-            }
-          });
-        } else {
-          // Pas de changement d'image
-          this.loadArticles();
+      this.articleService.updateArticle(article.id, request).subscribe({
+        next: () => {
+          if (article.imageFile) {
+            this.articleService.uploadImage(article.id!, article.imageFile).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              },
+              error: () => {
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              }
+            });
+          } else if (!article.imagePreview && !article.imageFilename) {
+            this.articleService.deleteImage(article.id!).subscribe({
+              next: () => {
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              },
+              error: () => {
+                this.loadArticles();
+                this.loadDistinctValues();
+                this.isLoading.set(false);
+              }
+            });
+          } else {
+            this.loadArticles();
+            this.loadDistinctValues();
+            this.isLoading.set(false);
+          }
+        },
+        error: (err) => {
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
           this.isLoading.set(false);
         }
-      },
-      error: (err) => {
-        console.error('❌ Erreur mise à jour article:', err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
-    });
+      });
+    }
   }
-}
 
   cancelEdit(index: number) {
     const article = this.filteredArticles()[index];
@@ -421,6 +511,7 @@ export class ArticlesTableComponent implements OnInit {
     this.articleService.deleteArticle(article.id).subscribe({
       next: () => {
         this.loadArticles();
+        this.loadDistinctValues();
         this.isLoading.set(false);
       },
       error: (err) => {

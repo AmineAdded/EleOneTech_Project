@@ -80,4 +80,14 @@ public class ProcessController {
                     .body(new MessageResponse(e.getMessage()));
         }
     }
+    @GetMapping("/search/nom/{nom}")
+    public ResponseEntity<List<ProcessResponse>> searchByNom(@PathVariable String nom) {
+        List<ProcessResponse> process = processService.searchByNom(nom);
+        return ResponseEntity.ok(process);
+    }
+    @GetMapping("/distinct-noms")
+    public ResponseEntity<List<String>> getDistinctNoms() {
+        List<String> noms = processService.getDistinctNoms();
+        return ResponseEntity.ok(noms);
+    }
 }

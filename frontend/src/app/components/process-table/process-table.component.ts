@@ -24,6 +24,13 @@ interface ProcessTable extends ProcessResponse {
 export class ProcessTableComponent implements OnInit {
   process = signal<ProcessTable[]>([]);
   searchTerm = signal('');
+  
+  // ✅ NOUVEAU: Filtre avancé
+  searchNomProcess = signal('');
+  
+  // ✅ NOUVEAU: Liste déroulante depuis la base
+  availableNomProcess = signal<string[]>([]);
+  
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -34,6 +41,19 @@ export class ProcessTableComponent implements OnInit {
 
   ngOnInit() {
     this.loadProcess();
+    this.loadDistinctNoms();
+  }
+
+  // ✅ NOUVEAU: Charger les noms distincts
+  loadDistinctNoms() {
+    this.processService.getDistinctNoms().subscribe({
+      next: (noms) => {
+        this.availableNomProcess.set(noms);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des noms:', error);
+      }
+    });
   }
 
   loadProcess() {
@@ -54,6 +74,41 @@ export class ProcessTableComponent implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  // ✅ NOUVEAU: Recherche avancée
+  performSearch() {
+    const nomProcess = this.searchNomProcess();
+
+    if (!nomProcess) {
+      this.loadProcess();
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.processService.searchByNom(nomProcess).subscribe({
+      next: (process) => {
+        const mapped: ProcessTable[] = process.map((p) => ({
+          ...p,
+          isEditing: false,
+          isNew: false,
+        }));
+        this.process.set(mapped);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage.set('Erreur lors de la recherche');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  // ✅ NOUVEAU: Réinitialiser les filtres
+  resetFilters() {
+    this.searchTerm.set('');
+    this.searchNomProcess.set('');
+    this.loadProcess();
   }
 
   filteredProcess = computed(() => {
@@ -96,62 +151,62 @@ export class ProcessTableComponent implements OnInit {
   }
 
   saveRow(index: number) {
-  const proc = this.process()[index];
+    const proc = this.process()[index];
 
-  if (!proc.nom?.trim()) {
-    this.errorMessage.set('Le nom est obligatoire');
-    return;
+    if (!proc.nom?.trim()) {
+      this.errorMessage.set('Le nom est obligatoire');
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    if (proc.isNew) {
+      const request: CreateProcessRequest = {
+        ref: proc.ref?.trim() || null,
+        nom: proc.nom.trim()
+      };
+
+      this.processService.createProcess(request).subscribe({
+        next: () => {
+          this.loadProcess();
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
+          this.isLoading.set(false);
+        }
+      });
+
+    } else {
+      const request: UpdateProcessRequest = {
+        ref: proc.ref?.trim() || null,
+        nom: proc.nom.trim()
+      };
+
+      this.processService.updateProcess(proc.id, request).subscribe({
+        next: (response) => {
+          this.process.update(process => {
+            const updated = [...process];
+            updated[index] = {
+              ...response,
+              isEditing: false,
+              isNew: false
+            };
+            return updated;
+          });
+          delete this.originalProcess[proc.id];
+          this.editingProcess.delete(proc.id);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
+          this.isLoading.set(false);
+        }
+      });
+    }
   }
-
-  this.isLoading.set(true);
-
-  if (proc.isNew) {
-    const request: CreateProcessRequest = {
-      ref: proc.ref?.trim() || null,  // ✅ null au lieu de ""
-      nom: proc.nom.trim()
-    };
-
-    this.processService.createProcess(request).subscribe({
-      next: () => {
-        this.loadProcess();
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
-        this.isLoading.set(false);
-      }
-    });
-
-  } else {
-    const request: UpdateProcessRequest = {
-      ref: proc.ref?.trim() || null,  // ✅ null au lieu de ""
-      nom: proc.nom.trim()
-    };
-
-    this.processService.updateProcess(proc.id, request).subscribe({
-      next: (response) => {
-        this.process.update(process => {
-          const updated = [...process];
-          updated[index] = {
-            ...response,
-            isEditing: false,
-            isNew: false
-          };
-          return updated;
-        });
-        delete this.originalProcess[proc.id];
-        this.editingProcess.delete(proc.id);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
-        this.isLoading.set(false);
-      }
-    });
-  }
-}
 
   cancelEdit(index: number) {
     const proc = this.process()[index];
@@ -181,7 +236,6 @@ export class ProcessTableComponent implements OnInit {
       return;
     }
 
-    // ✅ Gérer ref null dans le message
     const refText = proc.ref ? ` (Ref: ${proc.ref})` : '';
     if (!confirm(`Supprimer le process "${proc.nom}"${refText} ?`)) return;
 

@@ -247,6 +247,68 @@ public class ArticleService {
         log.info("Article supprimé: {} (Ref: {})", article.getArticle(), article.getRef());
     }
 
+    // backend/src/main/java/com/eleonetech/app/service/ArticleService.java
+
+    public List<String> getDistinctRefs() {
+        return articleRepository.findDistinctRefs();
+    }
+
+    public List<String> getDistinctNoms() {
+        return articleRepository.findDistinctNoms();
+    }
+
+    public List<String> getDistinctFamilles() {
+        return articleRepository.findDistinctFamilles();
+    }
+
+    public List<String> getDistinctTypeProduits() {
+        return articleRepository.findDistinctTypeProduits();
+    }
+
+    public List<String> getDistinctTypeProcess() {
+        return articleRepository.findDistinctTypeProcess();
+    }
+
+    public List<ArticleResponse> searchByRef(String ref) {
+        List<Article> articles = articleRepository.findByRefWithClients(ref);
+        if (!articles.isEmpty()) {
+            articleRepository.findArticlesWithProcesses(articles);
+        }
+        return articles.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<ArticleResponse> searchByNom(String nom) {
+        List<Article> articles = articleRepository.findByNomWithClients(nom);
+        if (!articles.isEmpty()) {
+            articleRepository.findArticlesWithProcesses(articles);
+        }
+        return articles.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<ArticleResponse> searchByFamille(String famille) {
+        List<Article> articles = articleRepository.findByFamilleWithClients(famille);
+        if (!articles.isEmpty()) {
+            articleRepository.findArticlesWithProcesses(articles);
+        }
+        return articles.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<ArticleResponse> searchByTypeProduit(String typeProduit) {
+        List<Article> articles = articleRepository.findByTypeProduitWithClients(typeProduit);
+        if (!articles.isEmpty()) {
+            articleRepository.findArticlesWithProcesses(articles);
+        }
+        return articles.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<ArticleResponse> searchByTypeProcess(String typeProcess) {
+        List<Article> articles = articleRepository.findByTypeProcessWithClients(typeProcess);
+        if (!articles.isEmpty()) {
+            articleRepository.findArticlesWithProcesses(articles);
+        }
+        return articles.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
     private ArticleResponse mapToResponse(Article article) {
         List<String> clientNames = article.getArticleClients().stream()
                 .map(ac -> ac.getClient().getNomComplet())

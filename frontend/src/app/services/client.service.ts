@@ -77,4 +77,22 @@ export class ClientService {
   deleteClient(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
   }
+
+  // ✅ NOUVEAU: Listes déroulantes
+  getDistinctNomComplets(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-noms`);
+  }
+
+  // Recherche
+  searchByNomComplet(nomComplet: string): Observable<ClientResponse[]> {
+    return this.http.get<ClientResponse[]>(`${this.apiUrl}/search/nom/${nomComplet}`);
+  }
+
+  searchByModeTransport(modeTransport: string): Observable<ClientResponse[]> {
+    return this.http.get<ClientResponse[]>(`${this.apiUrl}/search/mode-transport/${modeTransport}`);
+  }
+
+  searchByIncoTerme(incoTerme: string): Observable<ClientResponse[]> {
+    return this.http.get<ClientResponse[]>(`${this.apiUrl}/search/incoterm/${incoTerme}`);
+  }
 }

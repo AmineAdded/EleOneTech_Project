@@ -21,6 +21,61 @@
     </div>
   </div>
 
+  <!-- ✅ NOUVEAU: Filtres avancés -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Nom complet</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchNomComplet"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let nom of availableNomComplets()" [value]="nom">
+            {{ nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Mode de Transport</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchModeTransport"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let mode of modeTransportOptions" [value]="mode">
+            {{ mode }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Incoterm</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchIncoTerme"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let inco of incoTermeOptions" [value]="inco">
+            {{ inco }}
+          </option>
+        </select>
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
   <!-- Message d'erreur -->
   <div *ngIf="errorMessage()" class="error-message">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -33,9 +88,8 @@
   </div>
 
   <div class="table-wrapper">
-    <!-- Clients en grille -->
     <div class="clients-grid">
-      <!-- ✅ HEADER FIXE - N'apparaît qu'une seule fois -->
+      <!-- HEADER FIXE -->
       <div class="clients-header" *ngIf="filteredClients().length > 0">
         <table class="client-main-table">
           <thead>
@@ -53,7 +107,7 @@
         </table>
       </div>
 
-      <!-- ✅ LIGNES DE DONNÉES - Sans thead répété -->
+      <!-- LIGNES DE DONNÉES -->
       <div
         *ngFor="let client of filteredClients(); let i = index"
         class="client-block"
@@ -62,7 +116,6 @@
         <table class="client-main-table">
           <tbody>
             <tr>
-              <!-- Ref -->
               <td>
                 <input
                   type="text"
@@ -73,7 +126,6 @@
                 />
               </td>
 
-              <!-- Nom Complet -->
               <td>
                 <input
                   type="text"
@@ -84,7 +136,6 @@
                 />
               </td>
 
-              <!-- Devise -->
               <td>
                 <select
                   [(ngModel)]="client.devise"
@@ -98,7 +149,6 @@
                 </select>
               </td>
 
-              <!-- Mode de Transport -->
               <td>
                 <select
                   [(ngModel)]="client.modeTransport"
@@ -112,7 +162,6 @@
                 </select>
               </td>
 
-              <!-- Incoterme -->
               <td>
                 <select
                   [(ngModel)]="client.incoTerme"
@@ -126,7 +175,6 @@
                 </select>
               </td>
 
-              <!-- Adresse de Livraison -->
               <td>
                 <textarea
                   [(ngModel)]="client.adresseLivraison"
@@ -137,7 +185,6 @@
                 ></textarea>
               </td>
 
-              <!-- Adresse de Facturation -->
               <td>
                 <textarea
                   [(ngModel)]="client.adresseFacturation"
@@ -148,7 +195,6 @@
                 ></textarea>
               </td>
 
-              <!-- Actions -->
               <td class="actions-cell">
                 <div class="action-buttons">
                   <button
@@ -157,13 +203,7 @@
                     (click)="editRow(i)"
                     title="Modifier"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
@@ -176,13 +216,7 @@
                     title="Enregistrer"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </button>
@@ -194,13 +228,7 @@
                     title="Annuler"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
@@ -212,17 +240,9 @@
                     title="Supprimer"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="3 6 5 6 21 6" />
-                      <path
-                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                      />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
                 </div>

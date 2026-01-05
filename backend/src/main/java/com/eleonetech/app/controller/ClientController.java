@@ -80,4 +80,26 @@ public class ClientController {
                     .body(new MessageResponse(e.getMessage()));
         }
     }
+    @GetMapping("/search/nom/{nomComplet}")
+    public ResponseEntity<List<ClientResponse>> searchByNomComplet(@PathVariable String nomComplet) {
+        List<ClientResponse> clients = clientService.searchByNomComplet(nomComplet);
+        return ResponseEntity.ok(clients);
+    }
+
+    @GetMapping("/search/mode-transport/{modeTransport}")
+    public ResponseEntity<List<ClientResponse>> searchByModeTransport(@PathVariable String modeTransport) {
+        List<ClientResponse> clients = clientService.searchByModeTransport(modeTransport);
+        return ResponseEntity.ok(clients);
+    }
+
+    @GetMapping("/search/incoterm/{incoTerme}")
+    public ResponseEntity<List<ClientResponse>> searchByIncoTerme(@PathVariable String incoTerme) {
+        List<ClientResponse> clients = clientService.searchByIncoTerme(incoTerme);
+        return ResponseEntity.ok(clients);
+    }
+    @GetMapping("/distinct-noms")
+    public ResponseEntity<List<String>> getDistinctNomComplets() {
+        List<String> noms = clientService.getDistinctNomComplets();
+        return ResponseEntity.ok(noms);
+    }
 }

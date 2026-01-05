@@ -12,11 +12,81 @@
       />
       <button class="add-btn" (click)="addNewRow()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="16"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
         </svg>
         Ajouter un article
+      </button>
+    </div>
+  </div>
+  <!-- ✅ NOUVEAU: Filtres avancés -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Référence</label>
+        <select class="filter-select" [(ngModel)]="searchRef" (ngModelChange)="performSearch()">
+          <option value="">Toutes</option>
+          <option *ngFor="let ref of availableRefs()" [value]="ref">
+            {{ ref }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Nom d'article</label>
+        <select class="filter-select" [(ngModel)]="searchNom" (ngModelChange)="performSearch()">
+          <option value="">Tous</option>
+          <option *ngFor="let nom of availableNoms()" [value]="nom">
+            {{ nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Famille</label>
+        <select class="filter-select" [(ngModel)]="searchFamille" (ngModelChange)="performSearch()">
+          <option value="">Toutes</option>
+          <option *ngFor="let famille of availableFamilles()" [value]="famille">
+            {{ famille }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Type de Produit</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchTypeProduit"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let type of availableTypeProduits()" [value]="type">
+            {{ type }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Type de Process</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchTypeProcess"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let type of availableTypeProcess()" [value]="type">
+            {{ type }}
+          </option>
+        </select>
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+        Réinitialiser
       </button>
     </div>
   </div>
@@ -31,193 +101,220 @@
       >
         <!-- En-tête des colonnes principales -->
         <!-- Remplacer le <table class="article-main-table"> par celui-ci -->
-<table class="article-main-table">
-  <thead>
-    <tr>
-      <th>Image</th> <!-- ✅ NOUVELLE COLONNE -->
-      <th>Ref</th>
-      <th>Article</th>
-      <th>Famille</th>
-      <th>Sous Famille</th>
-      <th>Type de Process</th>
-      <th>Type de Produit</th>
-      <th>PU</th>
-      <th>MPQ</th>
-      <th>Stock</th>
-      <th>Clients</th>
-      <th>Date de création</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <!-- ✅ NOUVELLE COLONNE IMAGE -->
-      <td class="image-cell">
-        <!-- Affichage de l'image -->
-        <div class="image-container" *ngIf="article.imagePreview || article.imageFilename">
-          <img
-            [src]="article.imagePreview || getImageUrl(article.imageFilename!)"
-            alt="Image de l'article"
-            class="article-image">
-          <button
-            *ngIf="article.isEditing"
-            type="button"
-            class="remove-image-btn"
-            (click)="removeImage(i)"
-            title="Supprimer l'image">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
+        <table class="article-main-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <!-- ✅ NOUVELLE COLONNE -->
+              <th>Ref</th>
+              <th>Article</th>
+              <th>Famille</th>
+              <th>Sous Famille</th>
+              <th>Type de Process</th>
+              <th>Type de Produit</th>
+              <th>PU</th>
+              <th>MPQ</th>
+              <th>Stock</th>
+              <th>Clients</th>
+              <th>Date de création</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <!-- ✅ NOUVELLE COLONNE IMAGE -->
+              <td class="image-cell">
+                <!-- Affichage de l'image -->
+                <div class="image-container" *ngIf="article.imagePreview || article.imageFilename">
+                  <img
+                    [src]="article.imagePreview || getImageUrl(article.imageFilename!)"
+                    alt="Image de l'article"
+                    class="article-image"
+                  />
+                  <button
+                    *ngIf="article.isEditing"
+                    type="button"
+                    class="remove-image-btn"
+                    (click)="removeImage(i)"
+                    title="Supprimer l'image"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
 
-        <!-- Upload d'image en mode édition -->
-        <div class="upload-container" *ngIf="article.isEditing && !article.imagePreview && !article.imageFilename">
-          <label class="upload-label">
-            <input
-              type="file"
-              accept="image/*"
-              (change)="onImageSelected($event, i)"
-              class="upload-input">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-            <span>Ajouter une image</span>
-          </label>
-        </div>
+                <!-- Upload d'image en mode édition -->
+                <div
+                  class="upload-container"
+                  *ngIf="article.isEditing && !article.imagePreview && !article.imageFilename"
+                >
+                  <label class="upload-label">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      (change)="onImageSelected($event, i)"
+                      class="upload-input"
+                    />
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span>Ajouter une image</span>
+                  </label>
+                </div>
 
-        <!-- Placeholder quand pas d'image et pas en édition -->
-        <div class="no-image" *ngIf="!article.isEditing && !article.imageFilename">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </div>
-      </td>
+                <!-- Placeholder quand pas d'image et pas en édition -->
+                <div class="no-image" *ngIf="!article.isEditing && !article.imageFilename">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                </div>
+              </td>
 
-      <!-- Ref -->
-      <td>
-        <input
-          type="text"
-          [(ngModel)]="article.ref"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="Ref">
-      </td>
+              <!-- Ref -->
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="article.ref"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="Ref"
+                />
+              </td>
 
-      <!-- Article -->
-      <td>
-        <input
-          type="text"
-          [(ngModel)]="article.article"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="Article">
-      </td>
+              <!-- Article -->
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="article.article"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="Article"
+                />
+              </td>
 
-      <!-- ... reste des colonnes inchangé ... -->
-      <!-- Famille -->
-      <td>
-        <input
-          type="text"
-          [(ngModel)]="article.famille"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="Famille">
-      </td>
+              <!-- ... reste des colonnes inchangé ... -->
+              <!-- Famille -->
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="article.famille"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="Famille"
+                />
+              </td>
 
-      <!-- Sous Famille -->
-      <td>
-        <input
-          type="text"
-          [(ngModel)]="article.sousFamille"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="Sous Famille">
-      </td>
+              <!-- Sous Famille -->
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="article.sousFamille"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="Sous Famille"
+                />
+              </td>
 
-      <!-- Type Process -->
-      <td class="type-process-cell">
-        <select
-          [(ngModel)]="article.typeProcess"
-          [disabled]="!article.isEditing"
-          class="table-select type-process-select">
-          <option value="">Sélectionner</option>
-          <option value="Seulement Annexe">Seulement Annexe</option>
-          <option value="Seulement Usine">Seulement Usine</option>
-          <option value="Annexe + Usine">Annexe + Usine</option>
-        </select>
-      </td>
+              <!-- Type Process -->
+              <td class="type-process-cell">
+                <select
+                  [(ngModel)]="article.typeProcess"
+                  [disabled]="!article.isEditing"
+                  class="table-select type-process-select"
+                >
+                  <option value="">Sélectionner</option>
+                  <option value="Seulement Annexe">Seulement Annexe</option>
+                  <option value="Seulement Usine">Seulement Usine</option>
+                  <option value="Annexe + Usine">Annexe + Usine</option>
+                </select>
+              </td>
 
-      <!-- Type Produit -->
-      <td>
-        <select
-          [(ngModel)]="article.typeProduit"
-          [disabled]="!article.isEditing"
-          class="table-select">
-          <option value="">Sélectionner</option>
-          <option value="Simple">Simple</option>
-          <option value="Composé">Composé</option>
-        </select>
-      </td>
+              <!-- Type Produit -->
+              <td>
+                <select
+                  [(ngModel)]="article.typeProduit"
+                  [disabled]="!article.isEditing"
+                  class="table-select"
+                >
+                  <option value="">Sélectionner</option>
+                  <option value="Simple">Simple</option>
+                  <option value="Composé">Composé</option>
+                </select>
+              </td>
 
-      <!-- Prix Unitaire -->
-      <td>
-        <input
-          type="number"
-          step="0.01"
-          [(ngModel)]="article.prixUnitaire"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="0.00">
-      </td>
+              <!-- Prix Unitaire -->
+              <td>
+                <input
+                  type="number"
+                  step="0.01"
+                  [(ngModel)]="article.prixUnitaire"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="0.00"
+                />
+              </td>
 
-      <!-- MPQ -->
-      <td>
-        <input
-          type="number"
-          [(ngModel)]="article.mpq"
-          [disabled]="!article.isEditing"
-          class="table-input"
-          placeholder="0">
-      </td>
+              <!-- MPQ -->
+              <td>
+                <input
+                  type="number"
+                  [(ngModel)]="article.mpq"
+                  [disabled]="!article.isEditing"
+                  class="table-input"
+                  placeholder="0"
+                />
+              </td>
 
-      <!-- Stock (NON MODIFIABLE) -->
-      <td class="stock-cell">
-        <span
-          class="stock-badge"
-          [class.stock-high]="article.stock > 100"
-          [class.stock-medium]="article.stock > 50 && article.stock <= 100"
-          [class.stock-low]="article.stock <= 50">
-          {{ article.stock }}
-        </span>
-      </td>
+              <!-- Stock (NON MODIFIABLE) -->
+              <td class="stock-cell">
+                <span
+                  class="stock-badge"
+                  [class.stock-high]="article.stock > 100"
+                  [class.stock-medium]="article.stock > 50 && article.stock <= 100"
+                  [class.stock-low]="article.stock <= 50"
+                >
+                  {{ article.stock }}
+                </span>
+              </td>
 
-      <!-- Clients -->
-      <td class="clients-cell">
-        <app-clients-manager
-            [clients]="article.clients"
-            [isEditing]="article.isEditing || false"
-            [availableClientsList]="availableClients()"
-            (clientsChange)="updateClients(i, $event)">
-          </app-clients-manager>
-      </td>
+              <!-- Clients -->
+              <td class="clients-cell">
+                <app-clients-manager
+                  [clients]="article.clients"
+                  [isEditing]="article.isEditing || false"
+                  [availableClientsList]="availableClients()"
+                  (clientsChange)="updateClients(i, $event)"
+                >
+                </app-clients-manager>
+              </td>
 
-      <!-- Date de création -->
-      <td class="date-cell">
-        <span class="date-display" *ngIf="!article.isNew">
-          {{ formatDate(article.createdAt) }}
-        </span>
-        <span class="date-display new-article" *ngIf="article.isNew">
-          Nouveau
-        </span>
-      </td>
-    </tr>
-  </tbody>
-</table>
+              <!-- Date de création -->
+              <td class="date-cell">
+                <span class="date-display" *ngIf="!article.isNew">
+                  {{ formatDate(article.createdAt) }}
+                </span>
+                <span class="date-display new-article" *ngIf="article.isNew"> Nouveau </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <!-- Section Process et Actions en dessous -->
         <div class="article-footer">
@@ -248,8 +345,14 @@
                       <!-- ✅ LIGNE TOTAUX -->
                       <tr class="process-total-row">
                         <td class="process-total-label">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M3 3h18v18H3zM12 8v8m-4-4h8"/>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <path d="M3 3h18v18H3zM12 8v8m-4-4h8" />
                           </svg>
                           Total
                         </td>
@@ -273,7 +376,8 @@
                 <app-process-manager
                   [processes]="article.processes"
                   [isEditing]="article.isEditing || false"
-                  (processesChange)="updateProcesses(i, $event)">
+                  (processesChange)="updateProcesses(i, $event)"
+                >
                 </app-process-manager>
               </div>
             </div>
@@ -287,10 +391,11 @@
                 *ngIf="!article.isEditing"
                 class="edit-btn"
                 (click)="editRow(i)"
-                title="Modifier">
+                title="Modifier"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
               </button>
 
@@ -298,9 +403,10 @@
                 *ngIf="article.isEditing"
                 class="save-btn"
                 (click)="saveRow(i)"
-                title="Enregistrer">
+                title="Enregistrer"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <polyline points="20 6 9 17 4 12"/>
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </button>
 
@@ -308,20 +414,20 @@
                 *ngIf="article.isEditing"
                 class="cancel-btn"
                 (click)="cancelEdit(i)"
-                title="Annuler">
+                title="Annuler"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
 
-              <button
-                class="delete-btn"
-                (click)="deleteRow(i)"
-                title="Supprimer">
+              <button class="delete-btn" (click)="deleteRow(i)" title="Supprimer">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <polyline points="3 6 5 6 21 6" />
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  />
                 </svg>
               </button>
             </div>
@@ -332,18 +438,20 @@
       <!-- Empty State -->
       <div *ngIf="filteredArticles().length === 0 && articles().length > 0" class="empty-state">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="16"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
         </svg>
         <p>Aucun résultat trouvé pour cette recherche.</p>
       </div>
 
       <div *ngIf="articles().length === 0" class="empty-state">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          />
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+          <line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
         <p>Aucun article. Cliquez sur "Ajouter un article" pour commencer.</p>
       </div>

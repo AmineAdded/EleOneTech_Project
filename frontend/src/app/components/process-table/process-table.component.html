@@ -21,6 +21,33 @@
     </div>
   </div>
 
+  <!-- ✅ NOUVEAU: Filtre avancé -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Nom du process</label>
+        <select
+          class="filter-select"
+          [(ngModel)]="searchNomProcess"
+          (ngModelChange)="performSearch()"
+        >
+          <option value="">Tous</option>
+          <option *ngFor="let nom of availableNomProcess()" [value]="nom">
+            {{ nom }}
+          </option>
+        </select>
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
   <!-- Message d'erreur -->
   <div *ngIf="errorMessage()" class="error-message">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -33,9 +60,8 @@
   </div>
 
   <div class="table-wrapper">
-    <!-- Process en grille -->
     <div class="process-grid">
-      <!-- ✅ HEADER FIXE - N'apparaît qu'une seule fois -->
+      <!-- HEADER FIXE -->
       <div class="process-header" *ngIf="filteredProcess().length > 0">
         <table class="process-main-table">
           <thead>
@@ -48,7 +74,7 @@
         </table>
       </div>
 
-      <!-- ✅ LIGNES DE DONNÉES - Sans thead répété -->
+      <!-- LIGNES DE DONNÉES -->
       <div
         *ngFor="let proc of filteredProcess(); let i = index"
         class="process-block"
@@ -57,7 +83,6 @@
         <table class="process-main-table">
           <tbody>
             <tr>
-              <!-- Ref -->
               <td>
                 <input
                   type="text"
@@ -68,7 +93,6 @@
                 />
               </td>
 
-              <!-- Nom -->
               <td>
                 <input
                   type="text"
@@ -79,7 +103,6 @@
                 />
               </td>
 
-              <!-- Actions -->
               <td class="actions-cell">
                 <div class="action-buttons">
                   <button
@@ -88,13 +111,7 @@
                     (click)="editRow(i)"
                     title="Modifier"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
@@ -107,13 +124,7 @@
                     title="Enregistrer"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </button>
@@ -125,13 +136,7 @@
                     title="Annuler"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
@@ -143,17 +148,9 @@
                     title="Supprimer"
                     [disabled]="isLoading()"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="3 6 5 6 21 6" />
-                      <path
-                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                      />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
                 </div>

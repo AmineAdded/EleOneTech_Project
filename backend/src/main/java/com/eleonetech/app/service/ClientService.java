@@ -145,6 +145,29 @@ public class ClientService {
         clientRepository.deleteById(id);
         log.info("Client supprimé: {} (Ref: {})", client.getNomComplet(), client.getRef());
     }
+    public List<ClientResponse> searchByNomComplet(String nomComplet) {
+        return clientRepository.findByNomCompletContaining(nomComplet)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClientResponse> searchByModeTransport(String modeTransport) {
+        return clientRepository.findByModeTransport(modeTransport)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClientResponse> searchByIncoTerme(String incoTerme) {
+        return clientRepository.findByIncoTerme(incoTerme)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+    public List<String> getDistinctNomComplets() {
+        return clientRepository.findDistinctNomComplets();
+    }
 
     private ClientResponse mapToResponse(Client client) {
         return ClientResponse.builder()

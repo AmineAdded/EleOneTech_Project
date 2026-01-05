@@ -62,4 +62,14 @@ export class ProcessService {
   deleteProcess(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
   }
+
+  // ✅ NOUVEAU: Listes déroulantes
+  getDistinctNoms(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-noms`);
+  }
+
+  // Recherche
+  searchByNom(nom: string): Observable<ProcessResponse[]> {
+    return this.http.get<ProcessResponse[]>(`${this.apiUrl}/search/nom/${nom}`);
+  }
 }

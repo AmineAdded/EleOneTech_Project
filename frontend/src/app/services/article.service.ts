@@ -49,7 +49,7 @@ export interface ArticleResponse {
   prixUnitaire: number;
   mpq: number;
   stock: number;
-  imageFilename?: string; // ✅ NOUVEAU
+  imageFilename?: string;
   clients: string[];
   processes: ProcessDetail[];
   isActive: boolean;
@@ -89,32 +89,59 @@ export class ArticleService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
   }
 
-  // ✅ NOUVEAU: Upload d'image
- // frontend/src/app/services/article.service.ts (vérifier cette partie)
-// ✅ NOUVEAU: Upload d'image
-uploadImage(articleId: number, file: File): Observable<ArticleResponse> {
-  const formData = new FormData();
-  formData.append('image', file);
+  uploadImage(articleId: number, file: File): Observable<ArticleResponse> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post<ArticleResponse>(`${this.apiUrl}/${articleId}/image`, formData);
+  }
 
-  console.log('📤 Uploading image:', {
-    articleId,
-    fileName: file.name,
-    fileSize: file.size,
-    fileType: file.type
-  });
-
-  return this.http.post<ArticleResponse>(
-    `${this.apiUrl}/${articleId}/image`,
-    formData
-  );
-}
-  // ✅ NOUVEAU: URL de l'image
   getImageUrl(filename: string): string {
     return `${this.apiUrl}/image/${filename}`;
   }
 
-  // ✅ NOUVEAU: Suppression d'image
   deleteImage(articleId: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${articleId}/image`);
+  }
+
+  // ✅ NOUVEAU: Listes déroulantes
+  getDistinctRefs(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-refs`);
+  }
+
+  getDistinctNoms(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-noms`);
+  }
+
+  getDistinctFamilles(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-familles`);
+  }
+
+  getDistinctTypeProduits(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-type-produits`);
+  }
+
+  getDistinctTypeProcess(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/distinct-type-process`);
+  }
+
+  // Recherche
+  searchByRef(ref: string): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(`${this.apiUrl}/search/ref/${ref}`);
+  }
+
+  searchByNom(nom: string): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(`${this.apiUrl}/search/nom/${nom}`);
+  }
+
+  searchByFamille(famille: string): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(`${this.apiUrl}/search/famille/${famille}`);
+  }
+
+  searchByTypeProduit(typeProduit: string): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(`${this.apiUrl}/search/type-produit/${typeProduit}`);
+  }
+
+  searchByTypeProcess(typeProcess: string): Observable<ArticleResponse[]> {
+    return this.http.get<ArticleResponse[]>(`${this.apiUrl}/search/type-process/${typeProcess}`);
   }
 }
