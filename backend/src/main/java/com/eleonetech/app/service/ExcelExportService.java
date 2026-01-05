@@ -2,6 +2,7 @@
 package com.eleonetech.app.service;
 
 import com.eleonetech.app.dto.CommandeResponse;
+import com.eleonetech.app.dto.LivraisonResponse;
 import com.eleonetech.app.dto.ProductionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -21,7 +22,7 @@ public class ExcelExportService {
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    // ✅ NOUVEAU: Export pour les Commandes
+    // ✅ MODIFIÉ: Export pour les Commandes avec quantités livrées
     public byte[] exportCommandesToExcel(List<CommandeResponse> commandes) throws IOException {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -34,14 +35,16 @@ public class ExcelExportService {
             CellStyle numberStyle = createNumberStyle(workbook);
             CellStyle borderStyle = createBorderStyle(workbook);
 
-            // Header
+            // Header - ✅ Ajout des colonnes quantité livrée et non livrée
             Row headerRow = sheet.createRow(0);
             String[] columns = {
                     "Ref Article",
                     "Article",
                     "N° Commande Client",
                     "Client",
-                    "Quantité",
+                    "Quantité Totale",
+                    "Quantité Livrée",
+                    "Quantité Non Livrée",
                     "Type",
                     "Date Souhaitée",
                     "Date de Création"
@@ -68,34 +71,44 @@ public class ExcelExportService {
                 articleCell.setCellValue(commande.getArticleNom());
                 articleCell.setCellStyle(borderStyle);
 
-                // Client
-                Cell clientCell = row.createCell(2);
-                clientCell.setCellValue(commande.getClientNom());
-                clientCell.setCellStyle(borderStyle);
-
                 // N° Commande Client
-                Cell numeroCell = row.createCell(3);
+                Cell numeroCell = row.createCell(2);
                 numeroCell.setCellValue(commande.getNumeroCommandeClient());
                 numeroCell.setCellStyle(borderStyle);
 
-                // Quantité
-                Cell quantiteCell = row.createCell(4);
-                quantiteCell.setCellValue(commande.getQuantite());
-                quantiteCell.setCellStyle(numberStyle);
+                // Client
+                Cell clientCell = row.createCell(3);
+                clientCell.setCellValue(commande.getClientNom());
+                clientCell.setCellStyle(borderStyle);
+
+                // Quantité Totale
+                Cell quantiteTotaleCell = row.createCell(4);
+                quantiteTotaleCell.setCellValue(commande.getQuantite());
+                quantiteTotaleCell.setCellStyle(numberStyle);
+
+                // ✅ NOUVEAU: Quantité Livrée
+                Cell quantiteLivreeCell = row.createCell(5);
+                quantiteLivreeCell.setCellValue(commande.getQuantiteLivree() != null ? commande.getQuantiteLivree() : 0);
+                quantiteLivreeCell.setCellStyle(numberStyle);
+
+                // ✅ NOUVEAU: Quantité Non Livrée
+                Cell quantiteNonLivreeCell = row.createCell(6);
+                quantiteNonLivreeCell.setCellValue(commande.getQuantiteNonLivree() != null ? commande.getQuantiteNonLivree() : commande.getQuantite());
+                quantiteNonLivreeCell.setCellStyle(numberStyle);
 
                 // Type
-                Cell typeCell = row.createCell(5);
+                Cell typeCell = row.createCell(7);
                 typeCell.setCellValue(commande.getTypeCommande());
                 typeCell.setCellStyle(borderStyle);
 
                 // Date Souhaitée
-                Cell dateSouhaiteeCell = row.createCell(6);
+                Cell dateSouhaiteeCell = row.createCell(8);
                 LocalDate dateSouhaitee = LocalDate.parse(commande.getDateSouhaitee());
                 dateSouhaiteeCell.setCellValue(dateSouhaitee.format(DATE_FORMATTER));
                 dateSouhaiteeCell.setCellStyle(dateStyle);
 
                 // Date de Création
-                Cell dateCreationCell = row.createCell(7);
+                Cell dateCreationCell = row.createCell(9);
                 LocalDate dateCreation = LocalDate.parse(commande.getDateAjout());
                 dateCreationCell.setCellValue(dateCreation.format(DATE_FORMATTER));
                 dateCreationCell.setCellStyle(dateStyle);
@@ -108,7 +121,94 @@ public class ExcelExportService {
             }
 
             workbook.write(outputStream);
-            log.info("Export Excel généré : {} commandes", commandes.size());
+            log.info("Export Excel Commandes généré : {} commandes", commandes.size());
+
+            return outputStream.toByteArray();
+        }
+    }
+
+    // ✅ NOUVEAU: Export pour les Livraisons
+    public byte[] exportLivraisonsToExcel(List<LivraisonResponse> livraisons) throws IOException {
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Livraisons");
+
+            // Styles
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle dateStyle = createDateStyle(workbook);
+            CellStyle numberStyle = createNumberStyle(workbook);
+            CellStyle borderStyle = createBorderStyle(workbook);
+            CellStyle blStyle = createBlStyle(workbook);
+
+            // Header
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {
+                    "N° BL",
+                    "Ref Article",
+                    "Article",
+                    "Client",
+                    "N° Commande Client",
+                    "Quantité Livrée",
+                    "Date de Livraison"
+            };
+
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Data
+            int rowNum = 1;
+            for (LivraisonResponse livraison : livraisons) {
+                Row row = sheet.createRow(rowNum++);
+
+                // N° BL
+                Cell blCell = row.createCell(0);
+                blCell.setCellValue(livraison.getNumeroBL());
+                blCell.setCellStyle(blStyle);
+
+                // Ref Article
+                Cell refCell = row.createCell(1);
+                refCell.setCellValue(livraison.getArticleRef());
+                refCell.setCellStyle(borderStyle);
+
+                // Article
+                Cell articleCell = row.createCell(2);
+                articleCell.setCellValue(livraison.getArticleNom());
+                articleCell.setCellStyle(borderStyle);
+
+                // Client
+                Cell clientCell = row.createCell(3);
+                clientCell.setCellValue(livraison.getClientNom());
+                clientCell.setCellStyle(borderStyle);
+
+                // N° Commande Client
+                Cell numeroCell = row.createCell(4);
+                numeroCell.setCellValue(livraison.getNumeroCommandeClient());
+                numeroCell.setCellStyle(borderStyle);
+
+                // Quantité Livrée
+                Cell quantiteCell = row.createCell(5);
+                quantiteCell.setCellValue(livraison.getQuantiteLivree());
+                quantiteCell.setCellStyle(numberStyle);
+
+                // Date de Livraison
+                Cell dateCell = row.createCell(6);
+                LocalDate date = LocalDate.parse(livraison.getDateLivraison());
+                dateCell.setCellValue(date.format(DATE_FORMATTER));
+                dateCell.setCellStyle(dateStyle);
+            }
+
+            // Auto-size + padding
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+                sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1000);
+            }
+
+            workbook.write(outputStream);
+            log.info("Export Excel Livraisons généré : {} livraisons", livraisons.size());
 
             return outputStream.toByteArray();
         }
@@ -116,7 +216,6 @@ public class ExcelExportService {
 
     // Export pour les Productions (existant)
     public byte[] exportProductionsToExcel(List<ProductionResponse> productions) throws IOException {
-
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
@@ -147,7 +246,6 @@ public class ExcelExportService {
             // Data
             int rowNum = 1;
             for (ProductionResponse production : productions) {
-
                 Row row = sheet.createRow(rowNum++);
 
                 // Ref
@@ -184,7 +282,7 @@ public class ExcelExportService {
             }
 
             workbook.write(outputStream);
-            log.info("Export Excel généré : {} productions", productions.size());
+            log.info("Export Excel Productions généré : {} productions", productions.size());
 
             return outputStream.toByteArray();
         }
@@ -256,6 +354,29 @@ public class ExcelExportService {
 
         style.setAlignment(HorizontalAlignment.LEFT);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        return style;
+    }
+
+    // ✅ NOUVEAU: Style spécial pour les numéros de BL
+    private CellStyle createBlStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.DARK_RED.getIndex());
+        style.setFont(font);
+
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        style.setFillForegroundColor(IndexedColors.ROSE.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         return style;
     }

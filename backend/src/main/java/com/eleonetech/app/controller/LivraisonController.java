@@ -1,13 +1,18 @@
+// backend/src/main/java/com/eleonetech/app/controller/LivraisonController.java
 package com.eleonetech.app.controller;
 
 import com.eleonetech.app.dto.*;
+import com.eleonetech.app.service.ExcelExportService;
 import com.eleonetech.app.service.LivraisonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,6 +23,7 @@ import java.util.List;
 public class LivraisonController {
 
     private final LivraisonService livraisonService;
+    private final ExcelExportService excelExportService;
 
     @PostMapping
     public ResponseEntity<?> createLivraison(@Valid @RequestBody CreateLivraisonRequest request) {
@@ -90,6 +96,43 @@ public class LivraisonController {
             log.error("Erreur lors de la suppression de la livraison: ", e);
             return ResponseEntity.badRequest()
                     .body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    // ✅ NOUVEAU: Export Excel pour les livraisons
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportToExcel(
+            @RequestParam(required = false) String articleRef,
+            @RequestParam(required = false) String clientNom,
+            @RequestParam(required = false) String numeroCommande) {
+        try {
+            List<LivraisonResponse> livraisons;
+
+            // Déterminer quelles livraisons exporter selon les filtres
+            if (numeroCommande != null && !numeroCommande.isEmpty()) {
+                livraisons = livraisonService.searchByNumeroCommande(numeroCommande);
+            } else if (articleRef != null && !articleRef.isEmpty()) {
+                livraisons = livraisonService.searchByArticleRef(articleRef);
+            } else if (clientNom != null && !clientNom.isEmpty()) {
+                livraisons = livraisonService.searchByClientNom(clientNom);
+            } else {
+                livraisons = livraisonService.getAllLivraisons();
+            }
+
+            byte[] excelFile = excelExportService.exportLivraisonsToExcel(livraisons);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment",
+                    "livraisons_" + LocalDate.now() + ".xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(excelFile);
+
+        } catch (Exception e) {
+            log.error("Erreur lors de l'export Excel: ", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

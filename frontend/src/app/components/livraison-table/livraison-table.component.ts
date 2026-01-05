@@ -1,3 +1,4 @@
+// frontend/src/app/components/livraison-table/livraison-table.component.ts
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -65,31 +66,29 @@ export class LivraisonTableComponent implements OnInit {
   }
 
   loadLivraisons() {
-  this.isLoading.set(true);
-  this.livraisonService.getAllLivraisons().subscribe({
-    next: (livraisons) => {
-      const mapped: LivraisonTable[] = livraisons.map(l => ({
-        ...l,
-        isEditing: false,
-        isNew: false
-      }));
-      // ✅ Trier par date de création décroissante (plus récent en premier)
-      mapped.sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0).getTime();
-        const dateB = new Date(b.createdAt || 0).getTime();
-        return dateB - dateA; // Ordre décroissant
-      });
-      this.livraisons.set(mapped);
-      this.isLoading.set(false);
-    },
-    error: (error) => {
-      console.error(error);
-      this.errorMessage.set('Erreur lors du chargement des livraisons');
-      this.isLoading.set(false);
-    }
-  });
-}
-
+    this.isLoading.set(true);
+    this.livraisonService.getAllLivraisons().subscribe({
+      next: (livraisons) => {
+        const mapped: LivraisonTable[] = livraisons.map(l => ({
+          ...l,
+          isEditing: false,
+          isNew: false
+        }));
+        mapped.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+        this.livraisons.set(mapped);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage.set('Erreur lors du chargement des livraisons');
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   loadArticles() {
     this.articleService.getAllArticles().subscribe({
@@ -122,7 +121,7 @@ export class LivraisonTableComponent implements OnInit {
     this.commandeService.getAllCommandes().subscribe({
       next: (commandes) => {
         const commandesActives = commandes
-          .filter(c => c.isActive) // Uniquement les commandes actives
+          .filter(c => c.isActive)
           .map(c => ({
             numeroCommandeClient: c.numeroCommandeClient,
             articleRef: c.articleRef,
@@ -208,20 +207,19 @@ export class LivraisonTableComponent implements OnInit {
   }
 
   private updateLivraisons(livraisons: LivraisonResponse[]) {
-  const mapped: LivraisonTable[] = livraisons.map(l => ({
-    ...l,
-    isEditing: false,
-    isNew: false
-  }));
-  // ✅ Trier par date de création décroissante
-  mapped.sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0).getTime();
-    const dateB = new Date(b.createdAt || 0).getTime();
-    return dateB - dateA;
-  });
-  this.livraisons.set(mapped);
-  this.isLoading.set(false);
-}
+    const mapped: LivraisonTable[] = livraisons.map(l => ({
+      ...l,
+      isEditing: false,
+      isNew: false
+    }));
+    mapped.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+    this.livraisons.set(mapped);
+    this.isLoading.set(false);
+  }
 
   private handleSearchError(error: any) {
     console.error(error);
@@ -236,6 +234,36 @@ export class LivraisonTableComponent implements OnInit {
     this.searchNumeroCommande.set('');
     this.sortOrder.set(null);
     this.loadLivraisons();
+  }
+
+  // ✅ NOUVEAU: Export Excel
+  exportToExcel() {
+    this.isLoading.set(true);
+
+    const articleRef = this.searchArticleRef() || undefined;
+    const clientNom = this.searchClientNom() || undefined;
+    const numeroCommande = this.searchNumeroCommande() || undefined;
+
+    this.livraisonService.exportToExcel(articleRef, clientNom, numeroCommande).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const today = new Date().toISOString().split('T')[0];
+        link.download = `livraisons_${today}.xlsx`;
+
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error("Erreur lors de l'export:", error);
+        this.errorMessage.set("Erreur lors de l'export Excel");
+        this.isLoading.set(false);
+      },
+    });
   }
 
   addNewRow() {
@@ -316,7 +344,7 @@ export class LivraisonTableComponent implements OnInit {
       this.livraisonService.createLivraison(request).subscribe({
         next: () => {
           this.loadLivraisons();
-          this.loadCommandes(); // Recharger les commandes
+          this.loadCommandes();
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -425,7 +453,6 @@ export class LivraisonTableComponent implements OnInit {
 
   onArticleChange(liv: LivraisonTable) {
     liv.articleNom = this.getArticleNomFromRef(liv.articleRef);
-    // Filtrer les commandes pour cet article
   }
 
   getFilteredCommandes(articleRef: string, clientNom: string) {

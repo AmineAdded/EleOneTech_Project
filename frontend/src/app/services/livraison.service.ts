@@ -1,5 +1,6 @@
+// frontend/src/app/services/livraison.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface CreateLivraisonRequest {
@@ -74,5 +75,19 @@ export class LivraisonService {
 
   deleteLivraison(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/${id}`);
+  }
+
+  // ✅ NOUVEAU: Export Excel
+  exportToExcel(articleRef?: string, clientNom?: string, numeroCommande?: string): Observable<Blob> {
+    let params = new HttpParams();
+    
+    if (articleRef) params = params.set('articleRef', articleRef);
+    if (clientNom) params = params.set('clientNom', clientNom);
+    if (numeroCommande) params = params.set('numeroCommande', numeroCommande);
+    
+    return this.http.get(`${this.apiUrl}/export/excel`, {
+      params: params,
+      responseType: 'blob'
+    });
   }
 }

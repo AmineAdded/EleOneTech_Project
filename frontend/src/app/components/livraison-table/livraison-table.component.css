@@ -1,5 +1,31 @@
 /* frontend/src/app/components/livraison-table/livraison-table.component.css */
 
+/* ✅ NOUVEAU: Style du bouton Export Excel */
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #9C27B0, #BA68C8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+}
+
+.export-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .livraison-container {
   padding: 2rem;
   background: #f8f9fa;
@@ -169,7 +195,6 @@
   max-width: 100%;
 }
 
-/* Style de la scrollbar */
 .table-wrapper::-webkit-scrollbar {
   height: 10px;
 }
@@ -194,7 +219,6 @@
   gap: 0;
 }
 
-/* ✅ HEADER FIXE */
 .livraison-header {
   position: sticky;
   top: 0;
@@ -217,7 +241,7 @@
   border: none;
   border-bottom: 2px solid #e0e0e0;
   border-radius: 0;
-  overflow: visible; /* Changé de hidden à visible */
+  overflow: visible;
   transition: all 0.3s ease;
 }
 
@@ -239,8 +263,8 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
-  min-width: 1400px; /* Largeur augmentée pour la colonne Actions */
-  table-layout: fixed; /* Force le respect des largeurs de colonnes */
+  min-width: 1400px;
+  table-layout: fixed;
 }
 
 .livraison-main-table thead {
@@ -257,7 +281,6 @@
   position: relative;
 }
 
-/* ✅ STYLES DES BOUTONS DE TRI */
 .sort-btn {
   background: none;
   border: none;
@@ -282,7 +305,6 @@
   stroke-width: 2;
 }
 
-/* ✅ Largeurs des colonnes OPTIMISÉES pour affichage complet */
 .livraison-main-table th:nth-child(1),
 .livraison-main-table td:nth-child(1) {
   width: 100px;
@@ -344,14 +366,12 @@
   white-space: nowrap;
 }
 
-/* Permettre le texte complet sur les colonnes spécifiques */
-.livraison-main-table td:nth-child(3),  /* Article */
-.livraison-main-table td:nth-child(4) { /* Client */
+.livraison-main-table td:nth-child(3),
+.livraison-main-table td:nth-child(4) {
   white-space: normal;
   word-wrap: break-word;
 }
 
-/* Permettre l'affichage complet pour la colonne Actions */
 .livraison-main-table td:nth-child(8) {
   overflow: visible !important;
 }
@@ -391,7 +411,6 @@
   text-align: right;
 }
 
-/* ✅ Badge pour N° BL */
 .bl-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
@@ -402,7 +421,6 @@
   font-size: 0.9rem;
 }
 
-/* ✅ Badge pour Quantité */
 .quantity-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
@@ -413,7 +431,6 @@
   font-size: 0.9rem;
 }
 
-/* ✅ Groupe quantité avec hint */
 .quantity-group {
   display: flex;
   align-items: center;
@@ -557,7 +574,8 @@
     min-width: 100%;
   }
 
-  .add-btn {
+  .add-btn,
+  .export-btn {
     justify-content: center;
   }
 
