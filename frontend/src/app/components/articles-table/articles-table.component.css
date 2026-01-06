@@ -74,7 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  min-width: 2000px;
+  min-width: 1800px;
 }
 
 .article-block {
@@ -128,40 +128,42 @@
 
 /* Largeurs colonnes */
 .article-main-table th:nth-child(1),
-.article-main-table td:nth-child(1) { width: 100px; }
+.article-main-table td:nth-child(1) { width: 120px; } /* Image */
 
 .article-main-table th:nth-child(2),
-.article-main-table td:nth-child(2) { width: 200px; }
+.article-main-table td:nth-child(2) { width: 100px; } /* Ref */
 
 .article-main-table th:nth-child(3),
-.article-main-table td:nth-child(3) { width: 150px; }
+.article-main-table td:nth-child(3) { width: 180px; } /* Article */
 
 .article-main-table th:nth-child(4),
-.article-main-table td:nth-child(4) { width: 160px; }
+.article-main-table td:nth-child(4) { width: 140px; } /* Famille */
 
 .article-main-table th:nth-child(5),
-.article-main-table td:nth-child(5) { width: 180px; }
+.article-main-table td:nth-child(5) { width: 150px; } /* Sous Famille */
 
 .article-main-table th:nth-child(6),
-.article-main-table td:nth-child(6) { width: 140px; }
+.article-main-table td:nth-child(6) { width: 160px; } /* Type Process */
 
 .article-main-table th:nth-child(7),
-.article-main-table td:nth-child(7) { width: 120px; }
+.article-main-table td:nth-child(7) { width: 130px; } /* Type Produit */
 
 .article-main-table th:nth-child(8),
-.article-main-table td:nth-child(8) { width: 80px; }
+.article-main-table td:nth-child(8) { width: 100px; } /* PU */
 
-/* ✅ Stock Column */
 .article-main-table th:nth-child(9),
-.article-main-table td:nth-child(9) { width: 100px; }
+.article-main-table td:nth-child(9) { width: 80px; } /* MPQ */
 
 .article-main-table th:nth-child(10),
-.article-main-table td:nth-child(10) { width: 220px; }
+.article-main-table td:nth-child(10) { width: 100px; } /* Stock */
 
 .article-main-table th:nth-child(11),
-.article-main-table td:nth-child(11) { width: 170px; }
+.article-main-table td:nth-child(11) { width: 180px; } /* Clients - RÉDUIT */
 
-/* ✅ Stock Cell */
+.article-main-table th:nth-child(12),
+.article-main-table td:nth-child(12) { width: 150px; } /* Date */
+
+/* Stock Cell */
 .stock-cell {
   text-align: center;
 }
@@ -191,24 +193,9 @@
   color: #C62828;
 }
 
+/* Clients cell - plus de scroll horizontal */
 .clients-cell {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.clients-cell::-webkit-scrollbar {
-  height: 6px;
-}
-
-.clients-cell::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.clients-cell::-webkit-scrollbar-thumb {
-  background: #9C27B0;
-  border-radius: 3px;
 }
 
 .type-process-cell {
@@ -276,7 +263,7 @@
   text-align: right;
 }
 
-/* Process Section */
+/* Process Section - RÉDUITE */
 .article-footer {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -306,94 +293,14 @@
 }
 
 .process-display-table {
-  min-height: 100px;
+  min-height: 60px; /* RÉDUIT de 100px à 60px */
 }
 
 .empty-process {
   color: #999;
   font-style: italic;
   font-size: 0.85rem;
-  padding: 1rem 0;
-}
-
-.process-scroll {
-  max-height: 280px;
-  overflow-y: auto;
-  border: 1.5px solid #E0E0E0;
-  border-radius: 6px;
-}
-
-.process-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.process-table thead {
-  background: linear-gradient(135deg, #2196F3, #42A5F5);
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.process-table th {
-  padding: 0.6rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.process-table tbody tr {
-  border-bottom: 1px solid #E0E0E0;
-}
-
-.process-table tbody tr:hover {
-  background: #F5F5F5;
-}
-
-.process-table td {
-  padding: 0.6rem;
-}
-
-.process-name {
-  font-weight: 500;
-  color: #2196F3;
-}
-
-.process-value {
-  text-align: left;
-  color: #666;
-}
-
-/* ✅ LIGNE TOTAUX */
-.process-total-row {
-  background: linear-gradient(135deg, #E8F5E9, #C8E6C9) !important;
-  font-weight: 600;
-  border-top: 2px solid #4CAF50 !important;
-  position: sticky;
-  bottom: 0;
-}
-
-.process-total-label {
-  color: #2E7D32 !important;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.process-total-value {
-  color: #2E7D32 !important;
-  font-weight: 700;
-}
-
-.bottleneck {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(244, 67, 54, 0.1);
-  border-radius: 4px;
+  padding: 0.5rem 0; /* RÉDUIT */
 }
 
 /* Action Buttons */
@@ -532,55 +439,14 @@
     padding: 1rem;
   }
 }
-/* Ajouter ces styles au fichier articles-table.component.css */
 
 /* ========== COLONNE IMAGE ========== */
-
-/* Ajuster les largeurs de colonnes existantes */
-.article-main-table th:nth-child(1),
-.article-main-table td:nth-child(1) { width: 120px; } /* Image */
-
-.article-main-table th:nth-child(2),
-.article-main-table td:nth-child(2) { width: 100px; } /* Ref */
-
-.article-main-table th:nth-child(3),
-.article-main-table td:nth-child(3) { width: 200px; } /* Article */
-
-.article-main-table th:nth-child(4),
-.article-main-table td:nth-child(4) { width: 150px; } /* Famille */
-
-.article-main-table th:nth-child(5),
-.article-main-table td:nth-child(5) { width: 160px; } /* Sous Famille */
-
-.article-main-table th:nth-child(6),
-.article-main-table td:nth-child(6) { width: 180px; } /* Type Process */
-
-.article-main-table th:nth-child(7),
-.article-main-table td:nth-child(7) { width: 140px; } /* Type Produit */
-
-.article-main-table th:nth-child(8),
-.article-main-table td:nth-child(8) { width: 120px; } /* PU */
-
-.article-main-table th:nth-child(9),
-.article-main-table td:nth-child(9) { width: 80px; } /* MPQ */
-
-.article-main-table th:nth-child(10),
-.article-main-table td:nth-child(10) { width: 100px; } /* Stock */
-
-.article-main-table th:nth-child(11),
-.article-main-table td:nth-child(11) { width: 220px; } /* Clients */
-
-.article-main-table th:nth-child(12),
-.article-main-table td:nth-child(12) { width: 170px; } /* Date */
-
-/* Cellule d'image */
 .image-cell {
   padding: 0.5rem !important;
   text-align: center;
   vertical-align: middle;
 }
 
-/* Container de l'image */
 .image-container {
   position: relative;
   width: 100px;
@@ -599,7 +465,6 @@
   display: block;
 }
 
-/* Bouton de suppression d'image */
 .remove-image-btn {
   position: absolute;
   top: 4px;
@@ -627,7 +492,6 @@
   stroke-width: 2.5;
 }
 
-/* Container d'upload */
 .upload-container {
   width: 100px;
   height: 100px;
@@ -681,7 +545,6 @@
   display: none;
 }
 
-/* Placeholder sans image */
 .no-image {
   width: 100px;
   height: 100px;
@@ -698,6 +561,7 @@
   stroke: #ccc;
   stroke-width: 1.5;
 }
+
 /* Filtres avancés */
 .filters-section {
   background: white;
@@ -774,7 +638,7 @@
   }
 }
 
-/* Responsive */
+/* Responsive pour images */
 @media (max-width: 1600px) {
   .image-container,
   .upload-container,
