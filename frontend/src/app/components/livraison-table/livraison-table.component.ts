@@ -45,6 +45,10 @@ export class LivraisonTableComponent implements OnInit {
 
   sortOrder = signal<SortOrder>(null);
 
+  // ✅ PAGINATION
+  currentPage = signal(1);
+  itemsPerPage = 3;
+
   isLoading = signal(false);
   errorMessage = signal('');
 
@@ -80,6 +84,7 @@ export class LivraisonTableComponent implements OnInit {
           return dateB - dateA;
         });
         this.livraisons.set(mapped);
+        this.currentPage.set(1); // ✅ Reset à la page 1
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -176,6 +181,69 @@ export class LivraisonTableComponent implements OnInit {
     return filtered;
   });
 
+  // ✅ PAGINATION: Livraisons paginées
+  paginatedLivraisons = computed(() => {
+    const filtered = this.filteredLivraisons();
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return filtered.slice(start, end);
+  });
+
+  // ✅ PAGINATION: Nombre total de pages
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredLivraisons().length / this.itemsPerPage);
+  });
+
+  // ✅ PAGINATION: Navigation
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  // ✅ PAGINATION: Array de numéros de pages
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      }
+    }
+
+    return pages;
+  }
+
   performSearch() {
     const articleRef = this.searchArticleRef();
     const clientNom = this.searchClientNom();
@@ -218,6 +286,7 @@ export class LivraisonTableComponent implements OnInit {
       return dateB - dateA;
     });
     this.livraisons.set(mapped);
+    this.currentPage.set(1); // ✅ Reset à la page 1
     this.isLoading.set(false);
   }
 
@@ -236,7 +305,6 @@ export class LivraisonTableComponent implements OnInit {
     this.loadLivraisons();
   }
 
-  // ✅ NOUVEAU: Export Excel
   exportToExcel() {
     this.isLoading.set(true);
 
@@ -285,10 +353,12 @@ export class LivraisonTableComponent implements OnInit {
     };
 
     this.livraisons.update(livraisons => [newLivraison, ...livraisons]);
+    this.currentPage.set(1); // ✅ Aller à la première page
   }
 
   editRow(index: number) {
-    const liv = this.livraisons()[index];
+    const liv = this.paginatedLivraisons()[index];
+    const realIndex = this.livraisons().findIndex(l => l.id === liv.id);
 
     if (!liv.isNew) {
       this.originalLivraisons[liv.id] = { ...liv };
@@ -297,13 +367,14 @@ export class LivraisonTableComponent implements OnInit {
 
     this.livraisons.update(livraisons => {
       const updated = [...livraisons];
-      updated[index] = { ...updated[index], isEditing: true };
+      updated[realIndex] = { ...updated[realIndex], isEditing: true };
       return updated;
     });
   }
 
   saveRow(index: number) {
-    const liv = this.livraisons()[index];
+    const liv = this.paginatedLivraisons()[index];
+    const realIndex = this.livraisons().findIndex(l => l.id === liv.id);
 
     if (!liv.articleRef?.trim()) {
       this.errorMessage.set('La référence de l\'article est obligatoire');
@@ -367,7 +438,7 @@ export class LivraisonTableComponent implements OnInit {
         next: (response) => {
           this.livraisons.update(livraisons => {
             const updated = [...livraisons];
-            updated[index] = {
+            updated[realIndex] = {
               ...response,
               isEditing: false,
               isNew: false
@@ -389,10 +460,11 @@ export class LivraisonTableComponent implements OnInit {
   }
 
   cancelEdit(index: number) {
-    const liv = this.livraisons()[index];
+    const liv = this.paginatedLivraisons()[index];
+    const realIndex = this.livraisons().findIndex(l => l.id === liv.id);
 
     if (liv.isNew) {
-      this.livraisons.update(livraisons => livraisons.filter((_, i) => i !== index));
+      this.livraisons.update(livraisons => livraisons.filter((_, i) => i !== realIndex));
       return;
     }
 
@@ -400,7 +472,7 @@ export class LivraisonTableComponent implements OnInit {
     if (original) {
       this.livraisons.update(livraisons => {
         const updated = [...livraisons];
-        updated[index] = { ...original, isEditing: false };
+        updated[realIndex] = { ...original, isEditing: false };
         return updated;
       });
       delete this.originalLivraisons[liv.id];
@@ -409,10 +481,11 @@ export class LivraisonTableComponent implements OnInit {
   }
 
   deleteRow(index: number) {
-    const liv = this.livraisons()[index];
+    const liv = this.paginatedLivraisons()[index];
+    const realIndex = this.livraisons().findIndex(l => l.id === liv.id);
 
     if (liv.isNew) {
-      this.livraisons.update(livraisons => livraisons.filter((_, i) => i !== index));
+      this.livraisons.update(livraisons => livraisons.filter((_, i) => i !== realIndex));
       return;
     }
 

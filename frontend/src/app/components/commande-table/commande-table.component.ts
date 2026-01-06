@@ -46,9 +46,12 @@ export class CommandeTableComponent implements OnInit {
 
   summary = signal<CommandeSummaryResponse | null>(null);
 
-  // ✅ NOUVEAU: États du tri
   sortColumn = signal<SortColumn>(null);
   sortOrder = signal<SortOrder>(null);
+
+  // ✅ PAGINATION
+  currentPage = signal(1);
+  itemsPerPage = 3;
 
   isLoading = signal(false);
   errorMessage = signal('');
@@ -69,31 +72,31 @@ export class CommandeTableComponent implements OnInit {
   }
 
   loadCommandes() {
-  this.isLoading.set(true);
-  this.commandeService.getAllCommandes().subscribe({
-    next: (commandes) => {
-      const mapped: CommandeTable[] = commandes.map((c) => ({
-        ...c,
-        isEditing: false,
-        isNew: false,
-      }));
-      // ✅ Trier par date de création décroissante (plus récent en premier)
-      mapped.sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0).getTime();
-        const dateB = new Date(b.createdAt || 0).getTime();
-        return dateB - dateA; // Ordre décroissant
-      });
-      this.commandes.set(mapped);
-      this.summary.set(null);
-      this.isLoading.set(false);
-    },
-    error: (error) => {
-      console.error(error);
-      this.errorMessage.set('Erreur lors du chargement des commandes');
-      this.isLoading.set(false);
-    },
-  });
-}
+    this.isLoading.set(true);
+    this.commandeService.getAllCommandes().subscribe({
+      next: (commandes) => {
+        const mapped: CommandeTable[] = commandes.map((c) => ({
+          ...c,
+          isEditing: false,
+          isNew: false,
+        }));
+        mapped.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+        this.commandes.set(mapped);
+        this.summary.set(null);
+        this.currentPage.set(1);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.errorMessage.set('Erreur lors du chargement des commandes');
+        this.isLoading.set(false);
+      },
+    });
+  }
 
   loadArticles() {
     this.articleService.getAllArticles().subscribe({
@@ -122,17 +125,14 @@ export class CommandeTableComponent implements OnInit {
     });
   }
 
-  // ✅ NOUVEAU: Fonction de tri
   toggleSort(column: 'dateSouhaitee' | 'dateAjout') {
     const currentColumn = this.sortColumn();
     const currentOrder = this.sortOrder();
 
     if (currentColumn !== column) {
-      // Nouvelle colonne sélectionnée: tri descendant
       this.sortColumn.set(column);
       this.sortOrder.set('desc');
     } else {
-      // Même colonne: changer l'ordre
       if (currentOrder === 'desc') {
         this.sortOrder.set('asc');
       } else if (currentOrder === 'asc') {
@@ -144,7 +144,6 @@ export class CommandeTableComponent implements OnInit {
     }
   }
 
-  // ✅ MODIFIÉ: Recherche avec tri
   filteredCommandes = computed(() => {
     let filtered = this.commandes();
     const term = this.searchTerm().toLowerCase();
@@ -159,7 +158,6 @@ export class CommandeTableComponent implements OnInit {
       );
     }
 
-    // ✅ NOUVEAU: Appliquer le tri
     const column = this.sortColumn();
     const order = this.sortOrder();
 
@@ -174,6 +172,66 @@ export class CommandeTableComponent implements OnInit {
 
     return filtered;
   });
+
+  // ✅ PAGINATION
+  paginatedCommandes = computed(() => {
+    const filtered = this.filteredCommandes();
+    const start = (this.currentPage() - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return filtered.slice(start, end);
+  });
+
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredCommandes().length / this.itemsPerPage);
+  });
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      }
+    }
+
+    return pages;
+  }
 
   performSearch() {
     const articleRef = this.searchArticleRef();
@@ -323,20 +381,20 @@ export class CommandeTableComponent implements OnInit {
   }
 
   private updateCommandes(commandes: CommandeResponse[]) {
-  const mapped: CommandeTable[] = commandes.map((c) => ({
-    ...c,
-    isEditing: false,
-    isNew: false,
-  }));
-  // ✅ Trier par date de création décroissante
-  mapped.sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0).getTime();
-    const dateB = new Date(b.createdAt || 0).getTime();
-    return dateB - dateA;
-  });
-  this.commandes.set(mapped);
-  this.isLoading.set(false);
-}
+    const mapped: CommandeTable[] = commandes.map((c) => ({
+      ...c,
+      isEditing: false,
+      isNew: false,
+    }));
+    mapped.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+    this.commandes.set(mapped);
+    this.currentPage.set(1);
+    this.isLoading.set(false);
+  }
 
   private handleSearchError(error: any) {
     console.error(error);
@@ -353,7 +411,7 @@ export class CommandeTableComponent implements OnInit {
     this.searchDateFin.set('');
     this.searchMode.set('date');
     this.searchTypeDate.set('souhaitee');
-    this.sortColumn.set(null); // ✅ Réinitialiser le tri
+    this.sortColumn.set(null);
     this.sortOrder.set(null);
     this.summary.set(null);
     this.loadCommandes();
@@ -418,31 +476,33 @@ export class CommandeTableComponent implements OnInit {
   }
 
   addNewRow() {
-  const today = new Date().toISOString().split('T')[0];
-  const newCommande: CommandeTable = {
-    id: 0 as any,
-    articleRef: '',
-    articleNom: '',
-    numeroCommandeClient: '',
-    clientNom: '',
-    quantite: 1,
-    typeCommande: 'PLANIFIEE',
-    dateSouhaitee: today,
-    dateAjout: today,
-    isActive: true,
-    createdAt: '',
-    updatedAt: '',
-    isEditing: true,
-    isNew: true,
-    quantiteLivree: 0,      // ✅ Ajouté
-    quantiteNonLivree: 0    // ✅ Ajouté
-  };
+    const today = new Date().toISOString().split('T')[0];
+    const newCommande: CommandeTable = {
+      id: 0 as any,
+      articleRef: '',
+      articleNom: '',
+      numeroCommandeClient: '',
+      clientNom: '',
+      quantite: 1,
+      typeCommande: 'PLANIFIEE',
+      dateSouhaitee: today,
+      dateAjout: today,
+      isActive: true,
+      createdAt: '',
+      updatedAt: '',
+      isEditing: true,
+      isNew: true,
+      quantiteLivree: 0,
+      quantiteNonLivree: 0
+    };
 
-  this.commandes.update((commandes) => [newCommande, ...commandes]);
-}
+    this.commandes.update((commandes) => [newCommande, ...commandes]);
+    this.currentPage.set(1);
+  }
 
   editRow(index: number) {
-    const cmd = this.commandes()[index];
+    const cmd = this.paginatedCommandes()[index];
+    const realIndex = this.commandes().findIndex(c => c.id === cmd.id);
 
     if (!cmd.isNew) {
       this.originalCommandes[cmd.id] = { ...cmd };
@@ -451,13 +511,14 @@ export class CommandeTableComponent implements OnInit {
 
     this.commandes.update((commandes) => {
       const updated = [...commandes];
-      updated[index] = { ...updated[index], isEditing: true };
+      updated[realIndex] = { ...updated[realIndex], isEditing: true };
       return updated;
     });
   }
 
   saveRow(index: number) {
-    const cmd = this.commandes()[index];
+    const cmd = this.paginatedCommandes()[index];
+    const realIndex = this.commandes().findIndex(c => c.id === cmd.id);
 
     if (!cmd.articleRef?.trim()) {
       this.errorMessage.set("La référence de l'article est obligatoire");
@@ -479,7 +540,7 @@ export class CommandeTableComponent implements OnInit {
       return;
     }
 
-     if (!cmd.typeCommande) {
+    if (!cmd.typeCommande) {
       this.errorMessage.set('Le type de commande est obligatoire');
       return;
     }
@@ -526,7 +587,7 @@ export class CommandeTableComponent implements OnInit {
         next: (response) => {
           this.commandes.update((commandes) => {
             const updated = [...commandes];
-            updated[index] = {
+            updated[realIndex] = {
               ...response,
               isEditing: false,
               isNew: false,
@@ -548,10 +609,11 @@ export class CommandeTableComponent implements OnInit {
   }
 
   cancelEdit(index: number) {
-    const cmd = this.commandes()[index];
+    const cmd = this.paginatedCommandes()[index];
+    const realIndex = this.commandes().findIndex(c => c.id === cmd.id);
 
     if (cmd.isNew) {
-      this.commandes.update((commandes) => commandes.filter((_, i) => i !== index));
+      this.commandes.update((commandes) => commandes.filter((_, i) => i !== realIndex));
       return;
     }
 
@@ -559,7 +621,7 @@ export class CommandeTableComponent implements OnInit {
     if (original) {
       this.commandes.update((commandes) => {
         const updated = [...commandes];
-        updated[index] = { ...original, isEditing: false };
+        updated[realIndex] = { ...original, isEditing: false };
         return updated;
       });
       delete this.originalCommandes[cmd.id];
@@ -568,10 +630,11 @@ export class CommandeTableComponent implements OnInit {
   }
 
   deleteRow(index: number) {
-    const cmd = this.commandes()[index];
+    const cmd = this.paginatedCommandes()[index];
+    const realIndex = this.commandes().findIndex(c => c.id === cmd.id);
 
     if (cmd.isNew) {
-      this.commandes.update((commandes) => commandes.filter((_, i) => i !== index));
+      this.commandes.update((commandes) => commandes.filter((_, i) => i !== realIndex));
       return;
     }
 

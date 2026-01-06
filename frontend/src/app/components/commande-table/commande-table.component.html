@@ -149,13 +149,11 @@
             <span class="stat-value highlight">{{ summary()!.totalQuantite }}</span>
           </div>
           <div class="stat-divider"></div>
-          <!-- NOUVEAU -->
           <div class="stat-item">
             <span class="stat-label">Quantité Ferme</span>
             <span class="stat-value ferme">{{ summary()!.quantiteFerme }}</span>
           </div>
           <div class="stat-divider"></div>
-          <!-- NOUVEAU -->
           <div class="stat-item">
             <span class="stat-label">Quantité Planifiée</span>
             <span class="stat-value planifiee">{{ summary()!.quantitePlanifiee }}</span>
@@ -185,7 +183,7 @@
     <!-- Commandes en grille -->
     <div class="commande-grid">
       <!-- ✅ HEADER FIXE -->
-      <div class="commande-header" *ngIf="filteredCommandes().length > 0">
+      <div class="commande-header" *ngIf="paginatedCommandes().length > 0">
         <table class="commande-main-table">
           <thead>
             <tr>
@@ -289,9 +287,9 @@
         </table>
       </div>
 
-      <!-- ✅ LIGNES DE DONNÉES -->
+      <!-- ✅ LIGNES DE DONNÉES (PAGINÉES) -->
       <div
-        *ngFor="let cmd of filteredCommandes(); let i = index"
+        *ngFor="let cmd of paginatedCommandes(); let i = index"
         class="commande-block"
         [class.editing-block]="isEditing(cmd)"
       >
@@ -503,6 +501,15 @@
       </div>
 
       <!-- Empty State -->
+      <div *ngIf="paginatedCommandes().length === 0 && filteredCommandes().length > 0" class="empty-state">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        <p>Cette page est vide.</p>
+      </div>
+
       <div *ngIf="filteredCommandes().length === 0 && commandes().length > 0" class="empty-state">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="12" cy="12" r="10" />
@@ -519,6 +526,49 @@
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
         <p>Aucune commande. Cliquez sur "Ajouter une commande" pour commencer.</p>
+      </div>
+    </div>
+
+    <!-- ✅ CONTRÔLES DE PAGINATION -->
+    <div class="pagination-controls" *ngIf="totalPages() > 1">
+      <button
+        class="pagination-btn"
+        (click)="previousPage()"
+        [disabled]="currentPage() === 1"
+        title="Page précédente"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+
+      <div class="pagination-numbers">
+        <button
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage()"
+          [class.ellipsis]="page === -1"
+          [disabled]="page === -1"
+          (click)="page !== -1 && goToPage(page)"
+          class="page-number"
+        >
+          {{ page === -1 ? '...' : page }}
+        </button>
+      </div>
+
+      <button
+        class="pagination-btn"
+        (click)="nextPage()"
+        [disabled]="currentPage() === totalPages()"
+        title="Page suivante"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <div class="pagination-info">
+        Page {{ currentPage() }} sur {{ totalPages() }}
+        ({{ filteredCommandes().length }} commande{{ filteredCommandes().length > 1 ? 's' : '' }})
       </div>
     </div>
   </div>
