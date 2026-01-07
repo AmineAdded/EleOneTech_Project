@@ -8,7 +8,7 @@
 
 .table-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 1.5rem;
 }
@@ -274,8 +274,9 @@
 
 .chart-wrapper {
   position: relative;
-  height: 500px;
+  height: 600px;
   width: 100%;
+  min-height: 400px;
 }
 
 /* Tableau détaillé */
@@ -452,7 +453,8 @@
   }
 
   .chart-wrapper {
-    height: 400px;
+    height: 500px;
+    min-height: 300px;
   }
 
   .stat-value {

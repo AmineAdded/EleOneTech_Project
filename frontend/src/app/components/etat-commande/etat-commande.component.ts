@@ -110,7 +110,12 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Le graphique sera créé après le chargement des données
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(() => {
+      if (this.commandes().length > 0) {
+        this.createChart();
+      }
+    }, 200);
   }
 
   loadData() {
@@ -258,10 +263,10 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               footer: (tooltipItems) => {
                 let total = 0;
                 tooltipItems.forEach(item => {
-  if (item.parsed && item.parsed.y !== null) {
-    total += item.parsed.y;
-  }
-});
+                  if (item.parsed && item.parsed.y !== null) {
+                    total += item.parsed.y;
+                  }
+                });
                 return 'Total: ' + total;
               }
             }
