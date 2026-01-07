@@ -9,12 +9,21 @@ Chart.register(...registerables);
 
 type SearchMode = 'month' | 'period';
 
+interface ArticleDetail {
+  articleNom: string;
+  quantite: number;
+  dateSouhaitee: string;
+  typeCommande: string;
+}
+
 interface ClientStat {
   clientNom: string;
   quantiteTotale: number;
   nombreCommandes: number;
   quantiteFerme: number;
   quantitePlanifiee: number;
+  articlesFerme: ArticleDetail[];
+  articlesPlanifiee: ArticleDetail[];
 }
 
 @Component({
@@ -68,13 +77,22 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     this.commandes().forEach(cmd => {
       const existing = stats.get(cmd.clientNom);
 
+      const articleDetail: ArticleDetail = {
+        articleNom: cmd.articleNom,
+        quantite: cmd.quantite,
+        dateSouhaitee: cmd.dateSouhaitee,
+        typeCommande: cmd.typeCommande
+      };
+
       if (existing) {
         existing.quantiteTotale += cmd.quantite;
         existing.nombreCommandes++;
         if (cmd.typeCommande === 'FERME') {
           existing.quantiteFerme += cmd.quantite;
+          existing.articlesFerme.push(articleDetail);
         } else {
           existing.quantitePlanifiee += cmd.quantite;
+          existing.articlesPlanifiee.push(articleDetail);
         }
       } else {
         stats.set(cmd.clientNom, {
@@ -82,7 +100,9 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
           quantiteTotale: cmd.quantite,
           nombreCommandes: 1,
           quantiteFerme: cmd.typeCommande === 'FERME' ? cmd.quantite : 0,
-          quantitePlanifiee: cmd.typeCommande === 'PLANIFIEE' ? cmd.quantite : 0
+          quantitePlanifiee: cmd.typeCommande === 'PLANIFIEE' ? cmd.quantite : 0,
+          articlesFerme: cmd.typeCommande === 'FERME' ? [articleDetail] : [],
+          articlesPlanifiee: cmd.typeCommande === 'PLANIFIEE' ? [articleDetail] : []
         });
       }
     });
@@ -198,6 +218,11 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     return `${year}-${month}-${day}`;
   }
 
+  private formatDateForDisplay(dateStr: string): string {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
   resetFilters() {
     this.searchMode.set('month');
     this.selectedYear.set(new Date().getFullYear());
@@ -272,16 +297,83 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
           },
           tooltip: {
             callbacks: {
-              footer: (tooltipItems) => {
+              title: (tooltipItems: any) => {
+                const clientNom = tooltipItems[0].label;
+                return `Client: ${clientNom}`;
+              },
+              label: (context: any) => {
+                const datasetLabel = context.dataset.label || '';
+                const value = context.parsed.y;
+                return `${datasetLabel}: ${value}`;
+              },
+              afterLabel: (context: any) => {
+                const clientIndex = context.dataIndex;
+                const clientStat = stats[clientIndex];
+                const datasetIndex = context.datasetIndex;
+
+                const articles = datasetIndex === 0
+                  ? clientStat.articlesFerme
+                  : clientStat.articlesPlanifiee;
+
+                if (articles.length === 0) {
+                  return '';
+                }
+
+                const lines: string[] = ['', '📦 Articles commandés:'];
+
+                // Grouper les articles par nom
+                const groupedArticles = new Map<string, { quantite: number, dates: string[] }>();
+
+                articles.forEach(art => {
+                  const existing = groupedArticles.get(art.articleNom);
+                  if (existing) {
+                    existing.quantite += art.quantite;
+                    if (!existing.dates.includes(art.dateSouhaitee)) {
+                      existing.dates.push(art.dateSouhaitee);
+                    }
+                  } else {
+                    groupedArticles.set(art.articleNom, {
+                      quantite: art.quantite,
+                      dates: [art.dateSouhaitee]
+                    });
+                  }
+                });
+
+                groupedArticles.forEach((info, articleNom) => {
+                  lines.push(`  • ${articleNom}: ${info.quantite}`);
+                  info.dates.forEach(date => {
+                    lines.push(`    → ${this.formatDateForDisplay(date)}`);
+                  });
+                });
+
+                return lines;
+              },
+              footer: (tooltipItems: any) => {
                 let total = 0;
-                tooltipItems.forEach(item => {
+                tooltipItems.forEach((item: any) => {
                   if (item.parsed && item.parsed.y !== null) {
                     total += item.parsed.y;
                   }
                 });
-                return 'Total: ' + total;
+                return `\nTotal pour ce type: ${total}`;
               }
-            }
+            },
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            padding: 12,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 12
+            },
+            footerFont: {
+              size: 12,
+              weight: 'bold'
+            },
+            displayColors: true,
+            boxWidth: 10,
+            boxHeight: 10
           }
         },
         scales: {
