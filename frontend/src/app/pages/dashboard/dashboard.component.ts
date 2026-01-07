@@ -16,6 +16,7 @@ import { ProcessTableComponent } from '../../components/process-table/process-ta
 import { ProductionTableComponent } from '../../components/production-table/production-table.component';
 import { CommandeTableComponent } from '../../components/commande-table/commande-table.component';
 import { LivraisonTableComponent } from '../../components/livraison-table/livraison-table.component';
+import { EtatCommandeComponent } from '../../components/etat-commande/etat-commande.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,6 +31,7 @@ import { LivraisonTableComponent } from '../../components/livraison-table/livrai
     ProductionTableComponent,
     CommandeTableComponent,
     LivraisonTableComponent,
+    EtatCommandeComponent
   ],
   template: `
     <div class="dashboard-container">
@@ -47,20 +49,20 @@ import { LivraisonTableComponent } from '../../components/livraison-table/livrai
         <app-commande-table *ngIf="activeMenu() === 'commande'"></app-commande-table>
         <app-livraison-table *ngIf="activeMenu() === 'livraison'"></app-livraison-table>
 
-        <!-- ✅ NOUVEAU: Carnet de Commande -->
-        <div *ngIf="activeMenu() === 'carnet-commande'" class="coming-soon">
+        <!-- ✅ ÉTAT DE COMMANDE -->
+        <app-etat-commande *ngIf="activeMenu() === 'etat-commande'"></app-etat-commande>
+
+        <!-- ✅ ÉTAT DE STOCK (À venir) -->
+        <div *ngIf="activeMenu() === 'etat-stock'" class="coming-soon">
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
           </svg>
-          <h2>Carnet de Commande</h2>
+          <h2>État de Stock</h2>
           <p>Cette fonctionnalité est en cours de développement...</p>
         </div>
       </div>
 
-      <!-- Modal Profil (code existant inchangé) -->
+      <!-- Modal Profil -->
       <div class="modal-overlay" *ngIf="showProfileModal()" (click)="closeProfileModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
           <div class="modal-header">
@@ -331,7 +333,7 @@ import { LivraisonTableComponent } from '../../components/livraison-table/livrai
         margin: 0;
       }
 
-      /* Modal styles (gardés identiques) */
+      /* Modal styles */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -595,7 +597,7 @@ import { LivraisonTableComponent } from '../../components/livraison-table/livrai
 export class DashboardComponent implements OnInit {
   currentUser: AuthResponse | null = null;
   showProfileModal = signal(false);
-  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'carnet-commande'>('articles');
+  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock'>('articles');
   activeTab = signal<'info' | 'password'>('info');
   isLoading = signal(false);
   errorMessage = signal('');
