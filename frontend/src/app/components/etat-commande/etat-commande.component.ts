@@ -319,7 +319,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                   return '';
                 }
 
-                const lines: string[] = ['', '📦 Articles commandés:'];
+                const lines: string[] = ['', '📦 Détails des articles:'];
 
                 // Grouper les articles par nom
                 const groupedArticles = new Map<string, { quantite: number, dates: string[] }>();
@@ -339,12 +339,40 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                   }
                 });
 
-                groupedArticles.forEach((info, articleNom) => {
-                  lines.push(`  • ${articleNom}: ${info.quantite}`);
-                  info.dates.forEach(date => {
-                    lines.push(`    → ${this.formatDateForDisplay(date)}`);
-                  });
+                // Limiter l'affichage à 5 articles maximum
+                const articlesArray = Array.from(groupedArticles.entries());
+                const maxDisplay = 5;
+                const maxDatesPerArticle = 3; // Limiter aussi le nombre de dates affichées
+
+                articlesArray.slice(0, maxDisplay).forEach(([articleNom, info]) => {
+                  // Tronquer le nom de l'article s'il est trop long
+                  const shortName = articleNom.length > 30
+                    ? articleNom.substring(0, 27) + '...'
+                    : articleNom;
+
+                  // Affichage des dates limitées
+                  let datesStr = '';
+                  if (info.dates.length <= maxDatesPerArticle) {
+                    datesStr = info.dates
+                      .map(d => this.formatDateForDisplay(d))
+                      .join(', ');
+                  } else {
+                    const displayedDates = info.dates
+                      .slice(0, maxDatesPerArticle)
+                      .map(d => this.formatDateForDisplay(d))
+                      .join(', ');
+                    datesStr = `${displayedDates} +${info.dates.length - maxDatesPerArticle}`;
+                  }
+
+                  lines.push(`  • ${shortName} (${info.quantite})`);
+                  lines.push(`    ${datesStr}`);
                 });
+
+                // Si plus de 5 articles, afficher le nombre restant
+                if (articlesArray.length > maxDisplay) {
+                  const remaining = articlesArray.length - maxDisplay;
+                  lines.push(`  ... et ${remaining} autre${remaining > 1 ? 's' : ''} article${remaining > 1 ? 's' : ''}`);
+                }
 
                 return lines;
               },
