@@ -1,5 +1,5 @@
 // frontend/src/app/components/etat-commande/etat-commande.component.ts
-import { Component, OnInit, signal, computed, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal, computed, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommandeService, CommandeResponse } from '../../services/commande.service';
@@ -28,6 +28,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   @ViewChild('chartCanvas', { static: false }) chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   private chart?: Chart;
+  private chartInitialized = false;
 
   searchMode = signal<SearchMode>('month');
   selectedYear = signal<number>(new Date().getFullYear());
@@ -102,7 +103,19 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     };
   });
 
-  constructor(private commandeService: CommandeService) {}
+  constructor(private commandeService: CommandeService) {
+    // Utiliser un effect pour recréer le graphique quand les données changent
+    effect(() => {
+      // Déclencher l'effect quand clientStats change
+      const stats = this.clientStats();
+
+      // Ne créer le graphique que si on a des données et que la vue est initialisée
+      if (stats.length > 0 && this.chartInitialized && !this.isLoading()) {
+        // Utiliser setTimeout pour s'assurer que le DOM est à jour
+        setTimeout(() => this.createChart(), 0);
+      }
+    });
+  }
 
   ngOnInit() {
     // Charger les données pour le mois en cours par défaut
@@ -110,12 +123,11 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Attendre que le DOM soit complètement chargé
-    setTimeout(() => {
-      if (this.commandes().length > 0) {
-        this.createChart();
-      }
-    }, 200);
+    this.chartInitialized = true;
+    // Créer le graphique initial si on a déjà des données
+    if (this.commandes().length > 0) {
+      setTimeout(() => this.createChart(), 100);
+    }
   }
 
   loadData() {
@@ -160,17 +172,16 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     // Charger toutes les commandes et filtrer par période
     this.commandeService.getAllCommandes().subscribe({
       next: (commandes) => {
-        // Filtrer par date de création (dateAjout)
+        // Filtrer par date souhaitée (dateSouhaitee)
         const filtered = commandes.filter(cmd => {
-          const cmdDate = cmd.dateAjout;
+          const cmdDate = cmd.dateSouhaitee;
           return cmdDate >= dateDebut && cmdDate <= dateFin;
         });
 
         this.commandes.set(filtered);
         this.isLoading.set(false);
 
-        // Créer le graphique après avoir les données
-        setTimeout(() => this.createChart(), 0);
+        // Le graphique sera recréé automatiquement par l'effect
       },
       error: (error) => {
         console.error('Erreur lors du chargement des commandes:', error);
@@ -197,13 +208,14 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   }
 
   private createChart() {
-    if (!this.chartCanvas) {
+    if (!this.chartCanvas?.nativeElement) {
       return;
     }
 
     // Détruire le graphique existant
     if (this.chart) {
       this.chart.destroy();
+      this.chart = undefined;
     }
 
     const stats = this.clientStats();
