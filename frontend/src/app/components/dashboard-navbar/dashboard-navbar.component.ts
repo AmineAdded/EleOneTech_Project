@@ -120,14 +120,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
 
           <div class="nav-divider"></div>
 
-          <!-- ✅ NOUVELLE SECTION ÉTAT -->
+          <!-- ✅ SECTION REPORTING -->
           <div class="nav-group">
             <span class="group-label">Reporting</span>
             <div class="nav-items">
               <div class="dropdown-wrapper">
                 <button
                   class="nav-item dropdown-btn"
-                  [class.active]="activeMenu() === 'etat-commande' || activeMenu() === 'etat-stock'"
+                  [class.active]="activeMenu() === 'etat-commande' || activeMenu() === 'taux-charge'"
                   (click)="toggleEtatDropdown()"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -164,13 +164,15 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                   </button>
                   <button
                     class="dropdown-item"
-                    [class.active]="activeMenu() === 'etat-stock'"
-                    (click)="setActiveMenu('etat-stock')"
+                    [class.active]="activeMenu() === 'taux-charge'"
+                    (click)="setActiveMenu('taux-charge')"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                      <line x1="12" y1="20" x2="12" y2="10" />
+                      <line x1="18" y1="20" x2="18" y2="4" />
+                      <line x1="6" y1="20" x2="6" y2="16" />
                     </svg>
-                    État de stock
+                    Taux de charge
                   </button>
                 </div>
               </div>
@@ -617,7 +619,7 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
   ],
 })
 export class DashboardNavbarComponent implements OnInit {
-  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock'>(
+  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'>(
     'articles'
   );
   showEtatDropdown = signal(false);
@@ -625,7 +627,7 @@ export class DashboardNavbarComponent implements OnInit {
 
   @Output() profileClick = new EventEmitter<void>();
   @Output() menuChange = new EventEmitter<
-    'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock'
+    'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'
   >();
 
   constructor(private authService: AuthService, private router: Router) {}
@@ -637,14 +639,14 @@ export class DashboardNavbarComponent implements OnInit {
     // ✅ Restaurer le menu actif depuis localStorage
     const savedMenu = localStorage.getItem('activeMenu');
     if (savedMenu) {
-      const menu = savedMenu as 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock';
+      const menu = savedMenu as 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge';
       this.activeMenu.set(menu);
       this.menuChange.emit(menu);
     }
   }
 
    setActiveMenu(
-    menu: 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock'
+    menu: 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'
   ) {
     this.activeMenu.set(menu);
     this.menuChange.emit(menu);
@@ -653,7 +655,7 @@ export class DashboardNavbarComponent implements OnInit {
     localStorage.setItem('activeMenu', menu);
 
     // Fermer le dropdown après sélection
-    if (menu === 'etat-commande' || menu === 'etat-stock') {
+    if (menu === 'etat-commande' || menu === 'taux-charge') {
       this.showEtatDropdown.set(false);
     }
   }

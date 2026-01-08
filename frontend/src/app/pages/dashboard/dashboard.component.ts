@@ -52,12 +52,14 @@ import { EtatCommandeComponent } from '../../components/etat-commande/etat-comma
         <!-- ✅ ÉTAT DE COMMANDE -->
         <app-etat-commande *ngIf="activeMenu() === 'etat-commande'"></app-etat-commande>
 
-        <!-- ✅ ÉTAT DE STOCK (À venir) -->
-        <div *ngIf="activeMenu() === 'etat-stock'" class="coming-soon">
+        <!-- ✅ TAUX DE CHARGE (À venir) -->
+        <div *ngIf="activeMenu() === 'taux-charge'" class="coming-soon">
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <line x1="12" y1="20" x2="12" y2="10" />
+            <line x1="18" y1="20" x2="18" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="16" />
           </svg>
-          <h2>État de Stock</h2>
+          <h2>Taux de Charge</h2>
           <p>Cette fonctionnalité est en cours de développement...</p>
         </div>
       </div>
@@ -597,7 +599,7 @@ import { EtatCommandeComponent } from '../../components/etat-commande/etat-comma
 export class DashboardComponent implements OnInit {
   currentUser: AuthResponse | null = null;
   showProfileModal = signal(false);
-  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'etat-stock'>('articles');
+  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'>('articles');
   activeTab = signal<'info' | 'password'>('info');
   isLoading = signal(false);
   errorMessage = signal('');
