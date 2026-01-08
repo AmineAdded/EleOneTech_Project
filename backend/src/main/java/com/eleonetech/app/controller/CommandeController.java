@@ -11,6 +11,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -207,6 +211,122 @@ public class CommandeController {
 
         } catch (Exception e) {
             log.error("Erreur lors de l'export Excel: ", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/export/etat-commandes")
+    public ResponseEntity<byte[]> exportEtatCommandes(
+            @RequestParam(required = false) String mode,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) String dateDebut,
+            @RequestParam(required = false) String dateFin) {
+        try {
+            log.info("📊 Export état commandes - Mode: {}", mode);
+
+            // Déterminer la période
+            String periode;
+            LocalDate debut;
+            LocalDate fin;
+
+            if ("month".equals(mode) && year != null && month != null) {
+                // Mode mois
+                debut = LocalDate.of(year, month, 1);
+                fin = debut.withDayOfMonth(debut.lengthOfMonth());
+
+                String[] monthNames = {"Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"};
+                periode = monthNames[month - 1] + " " + year;
+
+            } else if ("period".equals(mode) && dateDebut != null && dateFin != null) {
+                // Mode période
+                debut = LocalDate.parse(dateDebut);
+                fin = LocalDate.parse(dateFin);
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                periode = "Du " + debut.format(formatter) + " au " + fin.format(formatter);
+
+            } else {
+                // Par défaut : mois en cours
+                debut = LocalDate.now().withDayOfMonth(1);
+                fin = debut.withDayOfMonth(debut.lengthOfMonth());
+
+                String[] monthNames = {"Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"};
+                periode = monthNames[debut.getMonthValue() - 1] + " " + debut.getYear();
+            }
+
+            log.info("📅 Période: {} ({} au {})", periode, debut, fin);
+
+            // Récupérer toutes les commandes
+            List<CommandeResponse> allCommandes = commandeService.getAllCommandes();
+
+            // Filtrer par période
+            String finalDebut = debut.toString();
+            String finalFin = fin.toString();
+            List<CommandeResponse> filteredCommandes = allCommandes.stream()
+                    .filter(cmd -> {
+                        String dateSouhaitee = cmd.getDateSouhaitee();
+                        return dateSouhaitee.compareTo(finalDebut) >= 0
+                                && dateSouhaitee.compareTo(finalFin) <= 0;
+                    })
+                    .collect(Collectors.toList());
+
+            log.info("📦 Commandes filtrées: {}", filteredCommandes.size());
+
+            // Calculer les statistiques par client
+            Map<String, ExcelExportService.ClientStat> clientStats = new HashMap<>();
+
+            for (CommandeResponse cmd : filteredCommandes) {
+                String clientNom = cmd.getClientNom();
+
+                ExcelExportService.ClientStat stat = clientStats.get(clientNom);
+                if (stat == null) {
+                    stat = new ExcelExportService.ClientStat(clientNom, 0, 0, 0, 0);
+                    clientStats.put(clientNom, stat);
+                }
+
+                stat.quantiteTotale += cmd.getQuantite();
+                stat.nombreCommandes++;
+
+                if ("FERME".equals(cmd.getTypeCommande())) {
+                    stat.quantiteFerme += cmd.getQuantite();
+                } else {
+                    stat.quantitePlanifiee += cmd.getQuantite();
+                }
+            }
+
+            // Calculer les totaux
+            ExcelExportService.TotalStats totalStats = new ExcelExportService.TotalStats(
+                    clientStats.values().stream().mapToLong(s -> s.quantiteTotale).sum(),
+                    clientStats.values().stream().mapToLong(s -> s.quantiteFerme).sum(),
+                    clientStats.values().stream().mapToLong(s -> s.quantitePlanifiee).sum(),
+                    clientStats.values().stream().mapToInt(s -> s.nombreCommandes).sum(),
+                    clientStats.size()
+            );
+
+            log.info("📊 Stats - Clients: {}, Total: {}, Ferme: {}, Planifiée: {}",
+                    totalStats.nombreClients, totalStats.totalQuantite,
+                    totalStats.totalFerme, totalStats.totalPlanifiee);
+
+            // Générer l'Excel
+            byte[] excelFile = excelExportService.exportEtatCommandesToExcel(
+                    filteredCommandes, periode, clientStats, totalStats);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment",
+                    "etat_commandes_" + LocalDate.now() + ".xlsx");
+
+            log.info("✅ Export Excel généré avec succès");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(excelFile);
+
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'export Excel: ", e);
             return ResponseEntity.internalServerError().build();
         }
     }

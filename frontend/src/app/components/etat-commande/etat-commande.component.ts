@@ -1,5 +1,14 @@
 // frontend/src/app/components/etat-commande/etat-commande.component.ts
-import { Component, OnInit, signal, computed, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommandeService, CommandeResponse } from '../../services/commande.service';
@@ -33,7 +42,7 @@ interface MonthlyData {
       quantite: number;
       ferme: number;
       planifiee: number;
-    }
+    };
   };
   totalQuantite: number;
 }
@@ -43,11 +52,12 @@ interface MonthlyData {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './etat-commande.component.html',
-  styleUrl: './etat-commande.component.css'
+  styleUrl: './etat-commande.component.css',
 })
 export class EtatCommandeComponent implements OnInit, AfterViewInit {
   @ViewChild('chartCanvas', { static: false }) chartCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('monthlyChartCanvas', { static: false }) monthlyChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('monthlyChartCanvas', { static: false })
+  monthlyChartCanvas!: ElementRef<HTMLCanvasElement>;
 
   private chart?: Chart;
   private monthlyChart?: Chart;
@@ -87,23 +97,36 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     { value: 9, label: 'Septembre' },
     { value: 10, label: 'Octobre' },
     { value: 11, label: 'Novembre' },
-    { value: 12, label: 'Décembre' }
+    { value: 12, label: 'Décembre' },
   ];
 
-  monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  monthNames = [
+    'Jan',
+    'Fév',
+    'Mar',
+    'Avr',
+    'Mai',
+    'Juin',
+    'Juil',
+    'Août',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Déc',
+  ];
 
   // Statistiques par client
   clientStats = computed(() => {
     const stats: Map<string, ClientStat> = new Map();
 
-    this.commandes().forEach(cmd => {
+    this.commandes().forEach((cmd) => {
       const existing = stats.get(cmd.clientNom);
 
       const articleDetail: ArticleDetail = {
         articleNom: cmd.articleNom,
         quantite: cmd.quantite,
         dateSouhaitee: cmd.dateSouhaitee,
-        typeCommande: cmd.typeCommande
+        typeCommande: cmd.typeCommande,
       };
 
       if (existing) {
@@ -124,7 +147,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
           quantiteFerme: cmd.typeCommande === 'FERME' ? cmd.quantite : 0,
           quantitePlanifiee: cmd.typeCommande === 'PLANIFIEE' ? cmd.quantite : 0,
           articlesFerme: cmd.typeCommande === 'FERME' ? [articleDetail] : [],
-          articlesPlanifiee: cmd.typeCommande === 'PLANIFIEE' ? [articleDetail] : []
+          articlesPlanifiee: cmd.typeCommande === 'PLANIFIEE' ? [articleDetail] : [],
         });
       }
     });
@@ -140,7 +163,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       totalCommandes: stats.reduce((sum, s) => sum + s.nombreCommandes, 0),
       totalFerme: stats.reduce((sum, s) => sum + s.quantiteFerme, 0),
       totalPlanifiee: stats.reduce((sum, s) => sum + s.quantitePlanifiee, 0),
-      nombreClients: stats.length
+      nombreClients: stats.length,
     };
   });
 
@@ -171,7 +194,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Erreur lors du chargement des commandes:', error);
-      }
+      },
     });
 
     this.loadData();
@@ -232,7 +255,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   private loadCommandesByPeriod(dateDebut: string, dateFin: string) {
     this.commandeService.getAllCommandes().subscribe({
       next: (commandes) => {
-        const filtered = commandes.filter(cmd => {
+        const filtered = commandes.filter((cmd) => {
           const cmdDate = cmd.dateSouhaitee;
           return cmdDate >= dateDebut && cmdDate <= dateFin;
         });
@@ -244,7 +267,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
         console.error('Erreur lors du chargement des commandes:', error);
         this.errorMessage.set('Erreur lors du chargement des données');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -258,18 +281,18 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       monthlyStats.push({
         month: this.monthNames[month],
         clients: {},
-        totalQuantite: 0
+        totalQuantite: 0,
       });
     }
 
     // Filtrer par année
-    const filteredCommandes = this.allCommandes().filter(cmd => {
+    const filteredCommandes = this.allCommandes().filter((cmd) => {
       const cmdDate = new Date(cmd.dateSouhaitee);
       return cmdDate.getFullYear() === year;
     });
 
     // Grouper par mois et par client
-    filteredCommandes.forEach(cmd => {
+    filteredCommandes.forEach((cmd) => {
       const cmdDate = new Date(cmd.dateSouhaitee);
       const monthIndex = cmdDate.getMonth();
       const clientNom = cmd.clientNom;
@@ -278,7 +301,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
         monthlyStats[monthIndex].clients[clientNom] = {
           quantite: 0,
           ferme: 0,
-          planifiee: 0
+          planifiee: 0,
         };
       }
 
@@ -344,23 +367,23 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
-        labels: stats.map(s => s.clientNom),
+        labels: stats.map((s) => s.clientNom),
         datasets: [
           {
             label: 'Quantité Ferme',
-            data: stats.map(s => s.quantiteFerme),
+            data: stats.map((s) => s.quantiteFerme),
             backgroundColor: 'rgba(46, 125, 50, 0.8)',
             borderColor: 'rgba(46, 125, 50, 1)',
-            borderWidth: 1
+            borderWidth: 1,
           },
           {
             label: 'Quantité Planifiée',
-            data: stats.map(s => s.quantitePlanifiee),
+            data: stats.map((s) => s.quantitePlanifiee),
             backgroundColor: 'rgba(255, 152, 0, 0.8)',
             borderColor: 'rgba(255, 152, 0, 1)',
-            borderWidth: 1
-          }
-        ]
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -371,18 +394,18 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
             text: 'Quantités commandées par client',
             font: {
               size: 18,
-              weight: 'bold'
+              weight: 'bold',
             },
-            color: '#c2185b'
+            color: '#c2185b',
           },
           legend: {
             position: 'top',
             labels: {
               font: {
-                size: 12
+                size: 12,
               },
-              padding: 15
-            }
+              padding: 15,
+            },
           },
           tooltip: {
             callbacks: {
@@ -400,18 +423,17 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                 const clientStat = stats[clientIndex];
                 const datasetIndex = context.datasetIndex;
 
-                const articles = datasetIndex === 0
-                  ? clientStat.articlesFerme
-                  : clientStat.articlesPlanifiee;
+                const articles =
+                  datasetIndex === 0 ? clientStat.articlesFerme : clientStat.articlesPlanifiee;
 
                 if (articles.length === 0) {
                   return '';
                 }
 
                 const lines: string[] = ['', '📦 Détails des articles:'];
-                const groupedArticles = new Map<string, { quantite: number, dates: string[] }>();
+                const groupedArticles = new Map<string, { quantite: number; dates: string[] }>();
 
-                articles.forEach(art => {
+                articles.forEach((art) => {
                   const existing = groupedArticles.get(art.articleNom);
                   if (existing) {
                     existing.quantite += art.quantite;
@@ -421,7 +443,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                   } else {
                     groupedArticles.set(art.articleNom, {
                       quantite: art.quantite,
-                      dates: [art.dateSouhaitee]
+                      dates: [art.dateSouhaitee],
                     });
                   }
                 });
@@ -431,19 +453,16 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                 const maxDatesPerArticle = 3;
 
                 articlesArray.slice(0, maxDisplay).forEach(([articleNom, info]) => {
-                  const shortName = articleNom.length > 30
-                    ? articleNom.substring(0, 27) + '...'
-                    : articleNom;
+                  const shortName =
+                    articleNom.length > 30 ? articleNom.substring(0, 27) + '...' : articleNom;
 
                   let datesStr = '';
                   if (info.dates.length <= maxDatesPerArticle) {
-                    datesStr = info.dates
-                      .map(d => this.formatDateForDisplay(d))
-                      .join(', ');
+                    datesStr = info.dates.map((d) => this.formatDateForDisplay(d)).join(', ');
                   } else {
                     const displayedDates = info.dates
                       .slice(0, maxDatesPerArticle)
-                      .map(d => this.formatDateForDisplay(d))
+                      .map((d) => this.formatDateForDisplay(d))
                       .join(', ');
                     datesStr = `${displayedDates} +${info.dates.length - maxDatesPerArticle}`;
                   }
@@ -454,7 +473,11 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
 
                 if (articlesArray.length > maxDisplay) {
                   const remaining = articlesArray.length - maxDisplay;
-                  lines.push(`  ... et ${remaining} autre${remaining > 1 ? 's' : ''} article${remaining > 1 ? 's' : ''}`);
+                  lines.push(
+                    `  ... et ${remaining} autre${remaining > 1 ? 's' : ''} article${
+                      remaining > 1 ? 's' : ''
+                    }`
+                  );
                 }
 
                 return lines;
@@ -467,25 +490,25 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                   }
                 });
                 return `\nTotal pour ce type: ${total}`;
-              }
+              },
             },
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
             padding: 12,
             titleFont: {
               size: 14,
-              weight: 'bold'
+              weight: 'bold',
             },
             bodyFont: {
-              size: 12
+              size: 12,
             },
             footerFont: {
               size: 12,
-              weight: 'bold'
+              weight: 'bold',
             },
             displayColors: true,
             boxWidth: 10,
-            boxHeight: 10
-          }
+            boxHeight: 10,
+          },
         },
         scales: {
           x: {
@@ -495,16 +518,16 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               text: 'Clients',
               font: {
                 size: 14,
-                weight: 'bold'
-              }
+                weight: 'bold',
+              },
             },
             ticks: {
               font: {
-                size: 11
+                size: 11,
               },
               maxRotation: 45,
-              minRotation: 45
-            }
+              minRotation: 45,
+            },
           },
           y: {
             stacked: true,
@@ -514,17 +537,17 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               text: 'Quantité',
               font: {
                 size: 14,
-                weight: 'bold'
-              }
+                weight: 'bold',
+              },
             },
             ticks: {
               font: {
-                size: 12
-              }
-            }
-          }
-        }
-      }
+                size: 12,
+              },
+            },
+          },
+        },
+      },
     };
 
     this.chart = new Chart(ctx, config);
@@ -546,8 +569,8 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
 
     // Obtenir la liste unique de tous les clients
     const allClients = new Set<string>();
-    monthlyStats.forEach(month => {
-      Object.keys(month.clients).forEach(client => allClients.add(client));
+    monthlyStats.forEach((month) => {
+      Object.keys(month.clients).forEach((client) => allClients.add(client));
     });
 
     const clientArray = Array.from(allClients);
@@ -558,17 +581,17 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     // Créer les datasets
     const datasets = clientArray.map((clientNom, index) => ({
       label: clientNom,
-      data: monthlyStats.map(month => month.clients[clientNom]?.quantite || 0),
+      data: monthlyStats.map((month) => month.clients[clientNom]?.quantite || 0),
       backgroundColor: colors[index],
       borderColor: colors[index].replace('0.7', '1'),
-      borderWidth: 1
+      borderWidth: 1,
     }));
 
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
-        labels: monthlyStats.map(m => m.month),
-        datasets: datasets
+        labels: monthlyStats.map((m) => m.month),
+        datasets: datasets,
       },
       options: {
         responsive: true,
@@ -579,19 +602,19 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
             text: `Quantités commandées par mois - ${this.monthlyChartYear()}`,
             font: {
               size: 18,
-              weight: 'bold'
+              weight: 'bold',
             },
-            color: '#c2185b'
+            color: '#c2185b',
           },
           legend: {
             position: 'top',
             labels: {
               font: {
-                size: 11
+                size: 11,
               },
               padding: 10,
-              boxWidth: 12
-            }
+              boxWidth: 12,
+            },
           },
           tooltip: {
             callbacks: {
@@ -607,22 +630,22 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
                 const monthIndex = tooltipItems[0].dataIndex;
                 const total = monthlyStats[monthIndex].totalQuantite;
                 return `\nTotal du mois: ${total}`;
-              }
+              },
             },
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
             padding: 12,
             titleFont: {
               size: 14,
-              weight: 'bold'
+              weight: 'bold',
             },
             bodyFont: {
-              size: 12
+              size: 12,
             },
             footerFont: {
               size: 12,
-              weight: 'bold'
-            }
-          }
+              weight: 'bold',
+            },
+          },
         },
         scales: {
           x: {
@@ -632,14 +655,14 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               text: 'Mois',
               font: {
                 size: 14,
-                weight: 'bold'
-              }
+                weight: 'bold',
+              },
             },
             ticks: {
               font: {
-                size: 11
-              }
-            }
+                size: 11,
+              },
+            },
           },
           y: {
             stacked: true,
@@ -649,17 +672,17 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               text: 'Quantité',
               font: {
                 size: 14,
-                weight: 'bold'
-              }
+                weight: 'bold',
+              },
             },
             ticks: {
               font: {
-                size: 12
-              }
-            }
-          }
-        }
-      }
+                size: 12,
+              },
+            },
+          },
+        },
+      },
     };
 
     this.monthlyChart = new Chart(ctx, config);
@@ -686,27 +709,74 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   }
 
   exportData() {
-    const stats = this.clientStats();
-    const total = this.totalStats();
+    const mode = this.searchMode();
 
-    let csv = 'Client,Quantité Totale,Quantité Ferme,Quantité Planifiée,Nombre de Commandes\n';
+    if (mode === 'month') {
+      const year = this.selectedYear();
+      const month = this.selectedMonth();
 
-    stats.forEach(stat => {
-      csv += `${stat.clientNom},${stat.quantiteTotale},${stat.quantiteFerme},${stat.quantitePlanifiee},${stat.nombreCommandes}\n`;
-    });
+      this.commandeService.exportEtatCommandes('month', year, month).subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, `etat_commandes_${this.getMonthName(month)}_${year}.xlsx`);
+        },
+        error: (error) => {
+          console.error("Erreur lors de l'export:", error);
+          this.errorMessage.set("Erreur lors de l'export Excel");
+        },
+      });
+    } else {
+      const dateDebut = this.dateDebut();
+      const dateFin = this.dateFin();
 
-    csv += `\nTOTAL,${total.totalQuantite},${total.totalFerme},${total.totalPlanifiee},${total.totalCommandes}\n`;
+      if (!dateDebut || !dateFin) {
+        this.errorMessage.set('Veuillez sélectionner une période complète');
+        return;
+      }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      this.commandeService
+        .exportEtatCommandes('period', undefined, undefined, dateDebut, dateFin)
+        .subscribe({
+          next: (blob) => {
+            const formattedDebut = this.formatDateForFilename(dateDebut);
+            const formattedFin = this.formatDateForFilename(dateFin);
+            this.downloadFile(blob, `etat_commandes_${formattedDebut}_${formattedFin}.xlsx`);
+          },
+          error: (error) => {
+            console.error("Erreur lors de l'export:", error);
+            this.errorMessage.set("Erreur lors de l'export Excel");
+          },
+        });
+    }
+  }
+
+  private downloadFile(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `etat-commandes-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = filename;
     link.click();
-    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  private getMonthName(month: number): string {
+    const monthNames = [
+      'janvier',
+      'fevrier',
+      'mars',
+      'avril',
+      'mai',
+      'juin',
+      'juillet',
+      'aout',
+      'septembre',
+      'octobre',
+      'novembre',
+      'decembre',
+    ];
+    return monthNames[month - 1];
+  }
+
+  private formatDateForFilename(dateStr: string): string {
+    return dateStr.replace(/-/g, '');
   }
 }
