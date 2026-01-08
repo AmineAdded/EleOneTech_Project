@@ -357,25 +357,29 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Collecter tous les articles uniques et leurs quantités par client
+    // Collecter tous les articles uniques
     const allArticles = new Set<string>();
-    const clientArticleData = new Map<string, Map<string, number>>();
+
+    // Structure pour stocker les quantités par article, client et type de commande
+    const clientArticleData = new Map<string, Map<string, { ferme: number; planifiee: number }>>();
 
     stats.forEach((clientStat) => {
-      const articleQuantities = new Map<string, number>();
+      const articleQuantities = new Map<string, { ferme: number; planifiee: number }>();
 
       // Articles FERME
       clientStat.articlesFerme.forEach((art) => {
         allArticles.add(art.articleNom);
-        const current = articleQuantities.get(art.articleNom) || 0;
-        articleQuantities.set(art.articleNom, current + art.quantite);
+        const current = articleQuantities.get(art.articleNom) || { ferme: 0, planifiee: 0 };
+        current.ferme += art.quantite;
+        articleQuantities.set(art.articleNom, current);
       });
 
       // Articles PLANIFIEE
       clientStat.articlesPlanifiee.forEach((art) => {
         allArticles.add(art.articleNom);
-        const current = articleQuantities.get(art.articleNom) || 0;
-        articleQuantities.set(art.articleNom, current + art.quantite);
+        const current = articleQuantities.get(art.articleNom) || { ferme: 0, planifiee: 0 };
+        current.planifiee += art.quantite;
+        articleQuantities.set(art.articleNom, current);
       });
 
       clientArticleData.set(clientStat.clientNom, articleQuantities);
@@ -393,7 +397,8 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     const datasets = uniqueArticles.map((articleNom) => {
       const data = stats.map((clientStat) => {
         const clientArticles = clientArticleData.get(clientStat.clientNom);
-        return clientArticles?.get(articleNom) || 0;
+        const articleData = clientArticles?.get(articleNom);
+        return (articleData?.ferme || 0) + (articleData?.planifiee || 0);
       });
 
       return {
@@ -443,18 +448,41 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               },
               label: (context: any) => {
                 const articleNom = context.dataset.label;
-                const quantite = context.parsed.y;
+                const clientNom = context.label;
+                const clientArticles = clientArticleData.get(clientNom);
+                const articleData = clientArticles?.get(articleNom);
 
-                if (quantite === 0) return '';
+                if (!articleData || (articleData.ferme === 0 && articleData.planifiee === 0)) {
+                  return '';
+                }
 
-                return `${articleNom}: ${quantite}`;
+                const lines = [`${articleNom}:`];
+
+                if (articleData.ferme > 0) {
+                  lines.push(`  • Ferme: ${articleData.ferme}`);
+                }
+
+                if (articleData.planifiee > 0) {
+                  lines.push(`  • Planifiée: ${articleData.planifiee}`);
+                }
+
+                const total = articleData.ferme + articleData.planifiee;
+                lines.push(`  • Total: ${total}`);
+
+                return lines;
               },
               footer: (tooltipItems: any) => {
-                let total = 0;
-                tooltipItems.forEach((item: any) => {
-                  total += item.parsed.y;
-                });
-                return `\nQuantité totale: ${total}`;
+                const clientNom = tooltipItems[0].label;
+                const clientStat = stats.find(s => s.clientNom === clientNom);
+
+                if (!clientStat) return '';
+
+                return [
+                  '',
+                  `Quantité Ferme totale: ${clientStat.quantiteFerme}`,
+                  `Quantité Planifiée totale: ${clientStat.quantitePlanifiee}`,
+                  `Quantité totale: ${clientStat.quantiteTotale}`
+                ];
               },
             },
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
@@ -580,8 +608,24 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
               },
               label: (context: any) => {
                 const clientNom = context.dataset.label;
-                const quantite = context.parsed.y;
-                return `${clientNom}: ${quantite}`;
+                const monthIndex = context.dataIndex;
+                const clientData = monthlyStats[monthIndex].clients[clientNom];
+
+                if (!clientData) return '';
+
+                const lines = [`${clientNom}:`];
+
+                if (clientData.ferme > 0) {
+                  lines.push(`  • Ferme: ${clientData.ferme}`);
+                }
+
+                if (clientData.planifiee > 0) {
+                  lines.push(`  • Planifiée: ${clientData.planifiee}`);
+                }
+
+                lines.push(`  • Total: ${clientData.quantite}`);
+
+                return lines;
               },
               footer: (tooltipItems: any) => {
                 const monthIndex = tooltipItems[0].dataIndex;
