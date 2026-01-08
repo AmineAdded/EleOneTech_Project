@@ -60,17 +60,19 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   dateDebut = signal<string>('');
   dateFin = signal<string>('');
 
-  // ✅ NOUVEAU: Année pour le graphique mensuel
+  // ✅ Année pour le graphique mensuel
   monthlyChartYear = signal<number>(new Date().getFullYear());
 
   commandes = signal<CommandeResponse[]>([]);
+  allCommandes = signal<CommandeResponse[]>([]);
+  monthlyData = signal<MonthlyData[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
 
-  // Options pour les années (10 dernières années)
+  // Options pour les années (10 dernières années + 5 futures)
   years = computed(() => {
     const currentYear = new Date().getFullYear();
-    return Array.from({ length: 10 }, (_, i) => currentYear - i);
+    return Array.from({ length: 15 }, (_, i) => currentYear - 10 + i);
   });
 
   months = [
@@ -130,63 +132,6 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     return Array.from(stats.values()).sort((a, b) => b.quantiteTotale - a.quantiteTotale);
   });
 
-  // ✅ NOUVEAU: Données mensuelles
-  monthlyData = computed(() => {
-    const year = this.monthlyChartYear();
-    const monthlyStats: MonthlyData[] = [];
-
-    // Initialiser les 12 mois
-    for (let month = 0; month < 12; month++) {
-      monthlyStats.push({
-        month: this.monthNames[month],
-        clients: {},
-        totalQuantite: 0
-      });
-    }
-
-    // Récupérer toutes les commandes
-    this.commandeService.getAllCommandes().subscribe({
-      next: (allCommandes) => {
-        // Filtrer par année
-        const filteredCommandes = allCommandes.filter(cmd => {
-          const cmdDate = new Date(cmd.dateSouhaitee);
-          return cmdDate.getFullYear() === year;
-        });
-
-        // Grouper par mois et par client
-        filteredCommandes.forEach(cmd => {
-          const cmdDate = new Date(cmd.dateSouhaitee);
-          const monthIndex = cmdDate.getMonth();
-          const clientNom = cmd.clientNom;
-
-          if (!monthlyStats[monthIndex].clients[clientNom]) {
-            monthlyStats[monthIndex].clients[clientNom] = {
-              quantite: 0,
-              ferme: 0,
-              planifiee: 0
-            };
-          }
-
-          monthlyStats[monthIndex].clients[clientNom].quantite += cmd.quantite;
-          monthlyStats[monthIndex].totalQuantite += cmd.quantite;
-
-          if (cmd.typeCommande === 'FERME') {
-            monthlyStats[monthIndex].clients[clientNom].ferme += cmd.quantite;
-          } else {
-            monthlyStats[monthIndex].clients[clientNom].planifiee += cmd.quantite;
-          }
-        });
-
-        // Déclencher la création du graphique
-        if (this.monthlyChartInitialized) {
-          setTimeout(() => this.createMonthlyChart(monthlyStats), 0);
-        }
-      }
-    });
-
-    return monthlyStats;
-  });
-
   // Statistiques globales
   totalStats = computed(() => {
     const stats = this.clientStats();
@@ -211,14 +156,24 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     // ✅ Effect pour le graphique mensuel
     effect(() => {
       const year = this.monthlyChartYear();
-      if (this.monthlyChartInitialized) {
-        // Déclencher le rechargement des données
-        this.monthlyData();
+      if (this.monthlyChartInitialized && this.allCommandes().length > 0) {
+        this.calculateMonthlyData();
       }
     });
   }
 
   ngOnInit() {
+    // Charger toutes les commandes au démarrage
+    this.commandeService.getAllCommandes().subscribe({
+      next: (commandes) => {
+        this.allCommandes.set(commandes);
+        this.calculateMonthlyData();
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des commandes:', error);
+      }
+    });
+
     this.loadData();
   }
 
@@ -230,8 +185,10 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       setTimeout(() => this.createChart(), 100);
     }
 
-    // Charger les données mensuelles
-    this.monthlyData();
+    // Charger le graphique mensuel si les données sont disponibles
+    if (this.allCommandes().length > 0) {
+      setTimeout(() => this.calculateMonthlyData(), 100);
+    }
   }
 
   loadData() {
@@ -287,6 +244,58 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  // ✅ Calculer les données mensuelles
+  private calculateMonthlyData() {
+    const year = this.monthlyChartYear();
+    const monthlyStats: MonthlyData[] = [];
+
+    // Initialiser les 12 mois
+    for (let month = 0; month < 12; month++) {
+      monthlyStats.push({
+        month: this.monthNames[month],
+        clients: {},
+        totalQuantite: 0
+      });
+    }
+
+    // Filtrer par année
+    const filteredCommandes = this.allCommandes().filter(cmd => {
+      const cmdDate = new Date(cmd.dateSouhaitee);
+      return cmdDate.getFullYear() === year;
+    });
+
+    // Grouper par mois et par client
+    filteredCommandes.forEach(cmd => {
+      const cmdDate = new Date(cmd.dateSouhaitee);
+      const monthIndex = cmdDate.getMonth();
+      const clientNom = cmd.clientNom;
+
+      if (!monthlyStats[monthIndex].clients[clientNom]) {
+        monthlyStats[monthIndex].clients[clientNom] = {
+          quantite: 0,
+          ferme: 0,
+          planifiee: 0
+        };
+      }
+
+      monthlyStats[monthIndex].clients[clientNom].quantite += cmd.quantite;
+      monthlyStats[monthIndex].totalQuantite += cmd.quantite;
+
+      if (cmd.typeCommande === 'FERME') {
+        monthlyStats[monthIndex].clients[clientNom].ferme += cmd.quantite;
+      } else {
+        monthlyStats[monthIndex].clients[clientNom].planifiee += cmd.quantite;
+      }
+    });
+
+    this.monthlyData.set(monthlyStats);
+
+    // Créer le graphique
+    if (this.monthlyChartInitialized) {
+      setTimeout(() => this.createMonthlyChart(monthlyStats), 0);
+    }
   }
 
   private formatDate(date: Date): string {
@@ -519,7 +528,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     this.chart = new Chart(ctx, config);
   }
 
-  // ✅ NOUVEAU: Graphique mensuel
+  // ✅ Graphique mensuel
   private createMonthlyChart(monthlyStats: MonthlyData[]) {
     if (!this.monthlyChartCanvas?.nativeElement) {
       return;

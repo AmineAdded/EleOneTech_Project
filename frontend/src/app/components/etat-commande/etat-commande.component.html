@@ -177,21 +177,21 @@
     </div>
   </div>
 
-  <!-- ✅ NOUVEAU: Graphique mensuel -->
+  <!-- ✅ Graphique mensuel avec champ de saisie pour l'année -->
   <div class="chart-section monthly-chart-section" *ngIf="!isLoading()">
     <div class="monthly-chart-header">
       <h3>Évolution mensuelle des commandes</h3>
       <div class="year-selector">
         <label>Année :</label>
-        <select
+        <input
+          type="number"
           class="year-select"
           [ngModel]="monthlyChartYear()"
           (ngModelChange)="updateMonthlyChartYear($event)"
-        >
-          <option *ngFor="let year of years()" [value]="year">
-            {{ year }}
-          </option>
-        </select>
+          [min]="2000"
+          [max]="2100"
+          placeholder="Ex: 2026"
+        />
       </div>
     </div>
     <div class="chart-wrapper">

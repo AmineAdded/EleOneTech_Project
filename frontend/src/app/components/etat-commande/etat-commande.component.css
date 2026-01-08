@@ -279,7 +279,7 @@
   min-height: 400px;
 }
 
-/* ✅ NOUVEAU: Styles pour le graphique mensuel */
+/* ✅ Styles pour le graphique mensuel */
 .monthly-chart-section {
   background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
   border: 2px solid #e0e0e0;
@@ -313,6 +313,7 @@
   color: #666;
 }
 
+/* ✅ Styles pour le champ de saisie de l'année */
 .year-select {
   padding: 0.5rem 1rem;
   border: 2px solid #9C27B0;
@@ -323,6 +324,8 @@
   background: white;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 120px;
+  text-align: center;
 }
 
 .year-select:hover {
@@ -332,6 +335,17 @@
 .year-select:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.2);
+}
+
+/* ✅ Supprimer les flèches du input number */
+.year-select::-webkit-inner-spin-button,
+.year-select::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.year-select[type=number] {
+  -moz-appearance: textfield;
 }
 
 /* Tableau détaillé */
@@ -533,5 +547,9 @@
 
   .year-selector {
     justify-content: space-between;
+  }
+
+  .year-select {
+    width: 100%;
   }
 }
