@@ -18,6 +18,7 @@ Chart.register(...registerables);
 
 type SearchMode = 'month' | 'period';
 type ViewMode = 'client' | 'monthly';
+type MonthlySearchMode = 'year' | 'period';
 
 interface ArticleDetail {
   articleNom: string;
@@ -74,8 +75,12 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   dateFin = signal<string>('');
   selectedTypeCommande = signal<'TOUS' | 'FERME' | 'PLANIFIEE'>('TOUS');
 
+  // Nouveaux signaux pour le graphique mensuel
+  monthlySearchMode = signal<MonthlySearchMode>('year');
   monthlyChartYear = signal<number>(new Date().getFullYear());
   monthlyChartType = signal<'TOUS' | 'FERME' | 'PLANIFIEE'>('TOUS');
+  monthlyDateDebut = signal<string>('');
+  monthlyDateFin = signal<string>('');
 
   commandes = signal<CommandeResponse[]>([]);
   allCommandes = signal<CommandeResponse[]>([]);
@@ -177,8 +182,12 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     });
 
     effect(() => {
+      const searchMode = this.monthlySearchMode();
       const year = this.monthlyChartYear();
       const type = this.monthlyChartType();
+      const dateDebut = this.monthlyDateDebut();
+      const dateFin = this.monthlyDateFin();
+
       if (this.monthlyChartInitialized && this.allCommandes().length > 0 && this.viewMode() === 'monthly') {
         this.calculateMonthlyData();
       }
@@ -261,7 +270,6 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
           const cmdDate = cmd.dateSouhaitee;
           const dateInRange = cmdDate >= dateDebut && cmdDate <= dateFin;
 
-          // Filtre par type de commande
           const typeCommande = this.selectedTypeCommande();
           if (typeCommande === 'TOUS') {
             return dateInRange;
@@ -281,49 +289,92 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   }
 
   private calculateMonthlyData() {
-    const year = this.monthlyChartYear();
+    const searchMode = this.monthlySearchMode();
     const typeFilter = this.monthlyChartType();
-    const monthlyStats: MonthlyData[] = [];
 
-    for (let month = 0; month < 12; month++) {
-      monthlyStats.push({
-        month: this.monthNames[month],
-        clients: {},
-        totalQuantite: 0,
-      });
+    let startDate: Date;
+    let endDate: Date;
+    let monthlyStats: MonthlyData[] = [];
+
+    if (searchMode === 'year') {
+      const year = this.monthlyChartYear();
+      startDate = new Date(year, 0, 1);
+      endDate = new Date(year, 11, 31);
+
+      // Créer les stats pour les 12 mois
+      for (let month = 0; month < 12; month++) {
+        monthlyStats.push({
+          month: this.monthNames[month],
+          clients: {},
+          totalQuantite: 0,
+        });
+      }
+    } else {
+      const debut = this.monthlyDateDebut();
+      const fin = this.monthlyDateFin();
+
+      if (!debut || !fin) {
+        return;
+      }
+
+      startDate = new Date(debut);
+      endDate = new Date(fin);
+
+      // Créer les stats pour chaque mois dans la période
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const monthName = `${this.monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+        monthlyStats.push({
+          month: monthName,
+          clients: {},
+          totalQuantite: 0,
+        });
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
     }
 
     const filteredCommandes = this.allCommandes().filter((cmd) => {
       const cmdDate = new Date(cmd.dateSouhaitee);
-      const yearMatch = cmdDate.getFullYear() === year;
+      const dateInRange = cmdDate >= startDate && cmdDate <= endDate;
 
-      // Filtre par type de commande
       if (typeFilter === 'TOUS') {
-        return yearMatch;
+        return dateInRange;
       }
-      return yearMatch && cmd.typeCommande === typeFilter;
+      return dateInRange && cmd.typeCommande === typeFilter;
     });
 
     filteredCommandes.forEach((cmd) => {
       const cmdDate = new Date(cmd.dateSouhaitee);
-      const monthIndex = cmdDate.getMonth();
       const clientNom = cmd.clientNom;
 
-      if (!monthlyStats[monthIndex].clients[clientNom]) {
-        monthlyStats[monthIndex].clients[clientNom] = {
-          quantite: 0,
-          ferme: 0,
-          planifiee: 0,
-        };
+      let monthIndex: number;
+
+      if (searchMode === 'year') {
+        monthIndex = cmdDate.getMonth();
+      } else {
+        // Calculer l'index du mois dans la période
+        const monthsDiff = (cmdDate.getFullYear() - startDate.getFullYear()) * 12 +
+                          (cmdDate.getMonth() - startDate.getMonth());
+        monthIndex = monthsDiff;
       }
 
-      monthlyStats[monthIndex].clients[clientNom].quantite += cmd.quantite;
-      monthlyStats[monthIndex].totalQuantite += cmd.quantite;
+      if (monthIndex >= 0 && monthIndex < monthlyStats.length) {
+        if (!monthlyStats[monthIndex].clients[clientNom]) {
+          monthlyStats[monthIndex].clients[clientNom] = {
+            quantite: 0,
+            ferme: 0,
+            planifiee: 0,
+          };
+        }
 
-      if (cmd.typeCommande === 'FERME') {
-        monthlyStats[monthIndex].clients[clientNom].ferme += cmd.quantite;
-      } else {
-        monthlyStats[monthIndex].clients[clientNom].planifiee += cmd.quantite;
+        monthlyStats[monthIndex].clients[clientNom].quantite += cmd.quantite;
+        monthlyStats[monthIndex].totalQuantite += cmd.quantite;
+
+        if (cmd.typeCommande === 'FERME') {
+          monthlyStats[monthIndex].clients[clientNom].ferme += cmd.quantite;
+        } else {
+          monthlyStats[monthIndex].clients[clientNom].planifiee += cmd.quantite;
+        }
       }
     });
 
@@ -356,6 +407,15 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
+  resetMonthlyFilters() {
+    this.monthlySearchMode.set('year');
+    this.monthlyChartYear.set(new Date().getFullYear());
+    this.monthlyChartType.set('TOUS');
+    this.monthlyDateDebut.set('');
+    this.monthlyDateFin.set('');
+    this.calculateMonthlyData();
+  }
+
   private createChart() {
     if (!this.chartCanvas?.nativeElement) {
       return;
@@ -375,16 +435,12 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Collecter tous les articles uniques
     const allArticles = new Set<string>();
-
-    // Structure pour stocker les quantités par article, client et type de commande
     const clientArticleData = new Map<string, Map<string, { ferme: number; planifiee: number }>>();
 
     stats.forEach((clientStat) => {
       const articleQuantities = new Map<string, { ferme: number; planifiee: number }>();
 
-      // Articles FERME
       clientStat.articlesFerme.forEach((art) => {
         allArticles.add(art.articleNom);
         const current = articleQuantities.get(art.articleNom) || { ferme: 0, planifiee: 0 };
@@ -392,7 +448,6 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
         articleQuantities.set(art.articleNom, current);
       });
 
-      // Articles PLANIFIEE
       clientStat.articlesPlanifiee.forEach((art) => {
         allArticles.add(art.articleNom);
         const current = articleQuantities.get(art.articleNom) || { ferme: 0, planifiee: 0 };
@@ -403,7 +458,6 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       clientArticleData.set(clientStat.clientNom, articleQuantities);
     });
 
-    // Générer des couleurs pour chaque article
     const uniqueArticles = Array.from(allArticles);
     const articleColors = this.generateColors(uniqueArticles.length);
     const articleColorMap = new Map<string, string>();
@@ -411,7 +465,6 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       articleColorMap.set(article, articleColors[index]);
     });
 
-    // Créer les datasets : un dataset par article
     const datasets = uniqueArticles.map((articleNom) => {
       const data = stats.map((clientStat) => {
         const clientArticles = clientArticleData.get(clientStat.clientNom);
@@ -591,11 +644,24 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     }));
 
     const typeFilter = this.monthlyChartType();
+    const searchMode = this.monthlySearchMode();
+
     let titleSuffix = '';
     if (typeFilter === 'FERME') {
       titleSuffix = ' (Ferme)';
     } else if (typeFilter === 'PLANIFIEE') {
       titleSuffix = ' (Planifiée)';
+    }
+
+    let titlePeriod = '';
+    if (searchMode === 'year') {
+      titlePeriod = `${this.monthlyChartYear()}`;
+    } else {
+      const debut = this.monthlyDateDebut();
+      const fin = this.monthlyDateFin();
+      if (debut && fin) {
+        titlePeriod = `${this.formatDateForDisplay(debut)} - ${this.formatDateForDisplay(fin)}`;
+      }
     }
 
     const config: ChartConfiguration = {
@@ -610,7 +676,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
         plugins: {
           title: {
             display: true,
-            text: `Quantités commandées par mois - ${this.monthlyChartYear()}${titleSuffix}`,
+            text: `Quantités commandées par mois - ${titlePeriod}${titleSuffix}`,
             font: {
               size: 18,
               weight: 'bold',
