@@ -72,6 +72,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
   selectedMonth = signal<number>(new Date().getMonth() + 1);
   dateDebut = signal<string>('');
   dateFin = signal<string>('');
+  selectedTypeCommande = signal<'TOUS' | 'FERME' | 'PLANIFIEE'>('TOUS');
 
   monthlyChartYear = signal<number>(new Date().getFullYear());
 
@@ -256,7 +257,14 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
       next: (commandes) => {
         const filtered = commandes.filter((cmd) => {
           const cmdDate = cmd.dateSouhaitee;
-          return cmdDate >= dateDebut && cmdDate <= dateFin;
+          const dateInRange = cmdDate >= dateDebut && cmdDate <= dateFin;
+
+          // Filtre par type de commande
+          const typeCommande = this.selectedTypeCommande();
+          if (typeCommande === 'TOUS') {
+            return dateInRange;
+          }
+          return dateInRange && cmd.typeCommande === typeCommande;
         });
 
         this.commandes.set(filtered);
@@ -335,6 +343,7 @@ export class EtatCommandeComponent implements OnInit, AfterViewInit {
     this.selectedMonth.set(new Date().getMonth() + 1);
     this.dateDebut.set('');
     this.dateFin.set('');
+    this.selectedTypeCommande.set('TOUS');
     this.loadData();
   }
 

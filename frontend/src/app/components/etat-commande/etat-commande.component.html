@@ -103,6 +103,20 @@
           </div>
         </ng-container>
 
+        <!-- ✅ Nouveau filtre de type de commande -->
+        <div class="filter-group">
+          <label>Type de commande</label>
+          <select
+            class="filter-select"
+            [ngModel]="selectedTypeCommande()"
+            (ngModelChange)="selectedTypeCommande.set($event)"
+          >
+            <option value="TOUS">Tous</option>
+            <option value="FERME">Ferme</option>
+            <option value="PLANIFIEE">Planifiée</option>
+          </select>
+        </div>
+
         <div class="filter-buttons">
           <button class="search-btn" (click)="loadData()" [disabled]="isLoading()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
