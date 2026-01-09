@@ -43,8 +43,17 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'articles'"
                 (click)="setActiveMenu('articles')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                  />
                 </svg>
                 <span class="nav-text">Articles</span>
               </button>
@@ -54,7 +63,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'process'"
                 (click)="setActiveMenu('process')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 1v6m0 6v6" />
                 </svg>
@@ -66,7 +82,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'clients'"
                 (click)="setActiveMenu('clients')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                 </svg>
@@ -85,7 +108,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'production'"
                 (click)="setActiveMenu('production')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                   <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
@@ -97,7 +127,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'commande'"
                 (click)="setActiveMenu('commande')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                 </svg>
@@ -109,7 +146,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                 [class.active]="activeMenu() === 'livraison'"
                 (click)="setActiveMenu('livraison')"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <rect x="1" y="3" width="15" height="13" />
                   <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
                 </svg>
@@ -127,10 +171,19 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
               <div class="dropdown-wrapper">
                 <button
                   class="nav-item dropdown-btn"
-                  [class.active]="activeMenu() === 'etat-commande' || activeMenu() === 'taux-charge'"
+                  [class.active]="
+                    activeMenu() === 'etat-commande' || activeMenu() === 'taux-charge'
+                  "
                   (click)="toggleEtatDropdown()"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <path d="M9 11l3 3L22 4" />
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                   </svg>
@@ -156,7 +209,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                     [class.active]="activeMenu() === 'etat-commande'"
                     (click)="setActiveMenu('etat-commande')"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                       <line x1="3" y1="6" x2="21" y2="6" />
                     </svg>
@@ -167,7 +227,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
                     [class.active]="activeMenu() === 'taux-charge'"
                     (click)="setActiveMenu('taux-charge')"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
                       <line x1="12" y1="20" x2="12" y2="10" />
                       <line x1="18" y1="20" x2="18" y2="4" />
                       <line x1="6" y1="20" x2="6" y2="16" />
@@ -191,7 +258,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
 
           <div class="user-actions">
             <button class="action-btn profile-btn" (click)="openProfile()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -199,7 +273,14 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
             </button>
 
             <button class="action-btn logout-btn" (click)="logout()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
@@ -219,7 +300,7 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
         position: sticky;
         top: 0;
         z-index: 100;
-        border-bottom: 3px solid #E91E63;
+        border-bottom: 3px solid #e91e63;
       }
 
       .navbar-container {
@@ -619,15 +700,29 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
   ],
 })
 export class DashboardNavbarComponent implements OnInit {
-  activeMenu = signal<'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'>(
-    'articles'
-  );
+  activeMenu = signal<
+    | 'articles'
+    | 'process'
+    | 'clients'
+    | 'production'
+    | 'commande'
+    | 'livraison'
+    | 'etat-commande'
+    | 'taux-charge'
+  >('articles');
   showEtatDropdown = signal(false);
   currentUser: AuthResponse | null = null;
 
   @Output() profileClick = new EventEmitter<void>();
   @Output() menuChange = new EventEmitter<
-    'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'
+    | 'articles'
+    | 'process'
+    | 'clients'
+    | 'production'
+    | 'commande'
+    | 'livraison'
+    | 'etat-commande'
+    | 'taux-charge'
   >();
 
   constructor(private authService: AuthService, private router: Router) {}
@@ -636,24 +731,39 @@ export class DashboardNavbarComponent implements OnInit {
     this.authService.currentUser.subscribe((user) => {
       this.currentUser = user;
     });
-    // ✅ Restaurer le menu actif depuis localStorage
-    const savedMenu = localStorage.getItem('activeMenu');
+    // ✅ AJOUTER : Restaurer le menu actif depuis sessionStorage
+    const savedMenu = sessionStorage.getItem('activeMenu');
     if (savedMenu) {
-      const menu = savedMenu as 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge';
+      const menu = savedMenu as
+        | 'articles'
+        | 'process'
+        | 'clients'
+        | 'production'
+        | 'commande'
+        | 'livraison'
+        | 'etat-commande'
+        | 'taux-charge';
       this.activeMenu.set(menu);
       this.menuChange.emit(menu);
     }
   }
 
-   setActiveMenu(
-    menu: 'articles' | 'process' | 'clients' | 'production' | 'commande' | 'livraison' | 'etat-commande' | 'taux-charge'
+  setActiveMenu(
+    menu:
+      | 'articles'
+      | 'process'
+      | 'clients'
+      | 'production'
+      | 'commande'
+      | 'livraison'
+      | 'etat-commande'
+      | 'taux-charge'
   ) {
     this.activeMenu.set(menu);
     this.menuChange.emit(menu);
 
-    // ✅ Sauvegarder le menu actif dans localStorage
-    localStorage.setItem('activeMenu', menu);
-
+    // ✅ Utiliser sessionStorage au lieu de localStorage
+    sessionStorage.setItem('activeMenu', menu);
     // Fermer le dropdown après sélection
     if (menu === 'etat-commande' || menu === 'taux-charge') {
       this.showEtatDropdown.set(false);
@@ -661,7 +771,7 @@ export class DashboardNavbarComponent implements OnInit {
   }
 
   toggleEtatDropdown() {
-    this.showEtatDropdown.update(v => !v);
+    this.showEtatDropdown.update((v) => !v);
   }
 
   openProfile() {
@@ -669,6 +779,7 @@ export class DashboardNavbarComponent implements OnInit {
   }
 
   logout() {
+    sessionStorage.removeItem('activeMenu');
     this.authService.logout();
   }
 }

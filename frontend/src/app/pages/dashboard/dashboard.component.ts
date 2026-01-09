@@ -632,8 +632,8 @@ export class DashboardComponent implements OnInit {
         };
       }
     });
-    // ✅ Restaurer le menu actif depuis localStorage
-    const savedMenu = localStorage.getItem('activeMenu');
+    // ✅ Restaurer le menu actif depuis sessionStorage
+    const savedMenu = sessionStorage.getItem('activeMenu');
     if (savedMenu) {
       this.activeMenu.set(savedMenu as any);
     }
