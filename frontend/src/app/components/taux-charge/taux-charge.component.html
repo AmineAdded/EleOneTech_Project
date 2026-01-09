@@ -1,0 +1,241 @@
+<!-- frontend/src/app/components/taux-charge/taux-charge.component.html -->
+<div class="taux-charge-container">
+  <div class="table-header">
+    <h2>Taux de Charge par Process</h2>
+    <div class="header-actions">
+      <button class="export-btn" (click)="exportData()" [disabled]="isLoading() || chargeData().length === 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Mode de recherche</label>
+        <select 
+          class="filter-select" 
+          [(ngModel)]="searchMode" 
+          (ngModelChange)="onSearchModeChange()"
+        >
+          <option value="month">Par mois</option>
+          <option value="period">Par période</option>
+        </select>
+      </div>
+
+      <!-- Mode mois -->
+      <div class="filter-group" *ngIf="searchMode() === 'month'">
+        <label>Année</label>
+        <select class="filter-select" [(ngModel)]="selectedYear" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let year of availableYears()" [value]="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group" *ngIf="searchMode() === 'month'">
+        <label>Mois</label>
+        <select class="filter-select" [(ngModel)]="selectedMonth" (ngModelChange)="onFilterChange()">
+          <option *ngFor="let month of months" [value]="month.value">
+            {{ month.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Mode période -->
+      <div class="filter-group" *ngIf="searchMode() === 'period'">
+        <label>Date début</label>
+        <input 
+          type="date" 
+          class="filter-input" 
+          [(ngModel)]="dateDebut" 
+          (ngModelChange)="onFilterChange()"
+        />
+      </div>
+
+      <div class="filter-group" *ngIf="searchMode() === 'period'">
+        <label>Date fin</label>
+        <input 
+          type="date" 
+          class="filter-input" 
+          [(ngModel)]="dateFin" 
+          (ngModelChange)="onFilterChange()"
+        />
+      </div>
+
+      <!-- Heures disponibles -->
+      <div class="filter-group heures-group">
+        <label>Heures disponibles</label>
+        <div class="input-with-unit">
+          <input 
+            type="number" 
+            class="filter-input" 
+            [(ngModel)]="heuresDisponibles" 
+            (ngModelChange)="calculateChargeData()"
+            min="1"
+            placeholder="160"
+          />
+          <span class="unit">h</span>
+        </div>
+      </div>
+
+      <button class="reset-btn" (click)="resetFilters()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage()" class="error-message">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+    {{ errorMessage() }}
+    <button class="close-error" (click)="errorMessage.set('')">×</button>
+  </div>
+
+  <!-- Informations période -->
+  <div class="period-info" *ngIf="!errorMessage() && chargeData().length > 0">
+    <div class="info-card">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div class="info-content">
+        <span class="info-label">Période analysée</span>
+        <span class="info-value">{{ getPeriodLabel() }}</span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <div class="info-content">
+        <span class="info-label">Heures disponibles</span>
+        <span class="info-value">{{ heuresDisponibles() }}h</span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+      </svg>
+      <div class="info-content">
+        <span class="info-label">Commandes analysées</span>
+        <span class="info-value">{{ commandes().length }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique -->
+  <div class="chart-wrapper">
+    <div class="chart-container">
+      <canvas #chartCanvas></canvas>
+    </div>
+  </div>
+
+  <!-- Légende -->
+  <div class="legend-section" *ngIf="chargeData().length > 0">
+    <div class="legend-title">Interprétation des couleurs</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-color" style="background: rgba(33, 150, 243, 0.7);"></div>
+        <span>< 50% : Sous-charge</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: rgba(76, 175, 80, 0.7);"></div>
+        <span>50-80% : Optimal</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: rgba(255, 152, 0, 0.7);"></div>
+        <span>80-100% : Proche saturation</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: rgba(244, 67, 54, 0.7);"></div>
+        <span>> 100% : Surcharge</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau de données -->
+  <div class="data-table" *ngIf="chargeData().length > 0">
+    <h3>Détails des taux de charge</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Process</th>
+          <th>Temps nécessaire (h)</th>
+          <th>Heures disponibles (h)</th>
+          <th>Taux de charge (%)</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of chargeData()">
+          <td class="process-name">{{ data.processNom }}</td>
+          <td class="numeric">{{ data.tempsNecessaire.toFixed(2) }}</td>
+          <td class="numeric">{{ heuresDisponibles() }}</td>
+          <td class="numeric">
+            <span 
+              class="taux-badge"
+              [class.sous-charge]="data.tauxCharge < 50"
+              [class.optimal]="data.tauxCharge >= 50 && data.tauxCharge <= 80"
+              [class.proche-saturation]="data.tauxCharge > 80 && data.tauxCharge <= 100"
+              [class.surcharge]="data.tauxCharge > 100"
+            >
+              {{ data.tauxCharge.toFixed(2) }}%
+            </span>
+          </td>
+          <td>
+            <span 
+              class="status-badge"
+              [class.status-sous-charge]="data.tauxCharge < 50"
+              [class.status-optimal]="data.tauxCharge >= 50 && data.tauxCharge <= 80"
+              [class.status-proche]="data.tauxCharge > 80 && data.tauxCharge <= 100"
+              [class.status-surcharge]="data.tauxCharge > 100"
+            >
+              <span *ngIf="data.tauxCharge < 50">Sous-charge</span>
+              <span *ngIf="data.tauxCharge >= 50 && data.tauxCharge <= 80">Optimal</span>
+              <span *ngIf="data.tauxCharge > 80 && data.tauxCharge <= 100">Proche saturation</span>
+              <span *ngIf="data.tauxCharge > 100">⚠ Surcharge</span>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && chargeData().length === 0">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <line x1="12" y1="20" x2="12" y2="10" />
+      <line x1="18" y1="20" x2="18" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="16" />
+    </svg>
+    <h3>Aucune donnée disponible</h3>
+    <p>Aucune commande trouvée pour la période sélectionnée</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+</div>

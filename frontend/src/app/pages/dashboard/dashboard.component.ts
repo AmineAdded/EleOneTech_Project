@@ -17,6 +17,7 @@ import { ProductionTableComponent } from '../../components/production-table/prod
 import { CommandeTableComponent } from '../../components/commande-table/commande-table.component';
 import { LivraisonTableComponent } from '../../components/livraison-table/livraison-table.component';
 import { EtatCommandeComponent } from '../../components/etat-commande/etat-commande.component';
+import { TauxChargeComponent } from '../../components/taux-charge/taux-charge.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +32,8 @@ import { EtatCommandeComponent } from '../../components/etat-commande/etat-comma
     ProductionTableComponent,
     CommandeTableComponent,
     LivraisonTableComponent,
-    EtatCommandeComponent
+    EtatCommandeComponent,
+    TauxChargeComponent
   ],
   template: `
     <div class="dashboard-container">
@@ -53,15 +55,7 @@ import { EtatCommandeComponent } from '../../components/etat-commande/etat-comma
         <app-etat-commande *ngIf="activeMenu() === 'etat-commande'"></app-etat-commande>
 
         <!-- ✅ TAUX DE CHARGE (À venir) -->
-        <div *ngIf="activeMenu() === 'taux-charge'" class="coming-soon">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <line x1="12" y1="20" x2="12" y2="10" />
-            <line x1="18" y1="20" x2="18" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="16" />
-          </svg>
-          <h2>Taux de Charge</h2>
-          <p>Cette fonctionnalité est en cours de développement...</p>
-        </div>
+        <app-taux-charge *ngIf="activeMenu() === 'taux-charge'"></app-taux-charge>
       </div>
 
       <!-- Modal Profil -->
