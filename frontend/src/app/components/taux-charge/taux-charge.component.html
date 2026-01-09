@@ -2,16 +2,6 @@
 <div class="taux-charge-container">
   <div class="table-header">
     <h2>Taux de Charge par Process</h2>
-    <div class="header-actions">
-      <button class="export-btn" (click)="exportData()" [disabled]="isLoading() || chargeData().length === 0">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-        Exporter
-      </button>
-    </div>
   </div>
 
   <!-- Filtres -->
@@ -144,33 +134,11 @@
     </div>
   </div>
 
+  
   <!-- Graphique -->
   <div class="chart-wrapper">
     <div class="chart-container">
       <canvas #chartCanvas></canvas>
-    </div>
-  </div>
-
-  <!-- Légende -->
-  <div class="legend-section" *ngIf="chargeData().length > 0">
-    <div class="legend-title">Interprétation des couleurs</div>
-    <div class="legend-items">
-      <div class="legend-item">
-        <div class="legend-color" style="background: rgba(33, 150, 243, 0.7);"></div>
-        <span>< 50% : Sous-charge</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: rgba(76, 175, 80, 0.7);"></div>
-        <span>50-80% : Optimal</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: rgba(255, 152, 0, 0.7);"></div>
-        <span>80-100% : Proche saturation</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: rgba(244, 67, 54, 0.7);"></div>
-        <span>> 100% : Surcharge</span>
-      </div>
     </div>
   </div>
 

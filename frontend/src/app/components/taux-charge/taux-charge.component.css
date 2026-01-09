@@ -230,47 +230,6 @@
   position: relative;
 }
 
-/* Légende */
-.legend-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.legend-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.legend-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.legend-color {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-}
-
-.legend-item span {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
-}
-
 /* Tableau de données */
 .data-table {
   background: white;
