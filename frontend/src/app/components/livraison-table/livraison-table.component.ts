@@ -519,7 +519,7 @@ export class LivraisonTableComponent implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
-  getArticleNomFromRef(ref: string): string {
+    getArticleNomFromRef(ref: string): string {
     const article = this.availableArticles().find(a => a.ref === ref);
     return article ? article.nom : '';
   }
@@ -534,8 +534,20 @@ export class LivraisonTableComponent implements OnInit {
     );
   }
 
-  getQuantiteRestante(numeroCommande: string): number {
+   getQuantiteRestante(numeroCommande: string): number {
     const cmd = this.availableCommandes().find(c => c.numeroCommandeClient === numeroCommande);
     return cmd ? cmd.quantiteRestante : 0;
+  }
+   // ✅ NOUVELLE LOGIQUE: Quand on change la commande, remplir les autres champs
+  onCommandeChange(liv: LivraisonTable) {
+    const commande = this.availableCommandes().find(
+      c => c.numeroCommandeClient === liv.numeroCommandeClient
+    );
+    
+    if (commande) {
+      liv.articleRef = commande.articleRef;
+      liv.clientNom = commande.clientNom;
+      liv.articleNom = this.getArticleNomFromRef(commande.articleRef);
+    }
   }
 }

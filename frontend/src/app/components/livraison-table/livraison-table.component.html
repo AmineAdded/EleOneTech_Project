@@ -173,26 +173,9 @@
                 <span class="bl-badge">{{ liv.numeroBL }}</span>
               </td>
 
-              <!-- Ref Article -->
+               <!-- Ref Article -->
               <td>
-                <select
-                  *ngIf="isEditing(liv)"
-                  [(ngModel)]="liv.articleRef"
-                  (ngModelChange)="onArticleChange(liv)"
-                  class="table-select"
-                >
-                  <option value="">Sélectionner un article</option>
-                  <option *ngFor="let article of availableArticles()" [value]="article.ref">
-                    {{ article.ref }} - {{ article.nom }}
-                  </option>
-                </select>
-                <input
-                  *ngIf="!isEditing(liv)"
-                  type="text"
-                  [value]="liv.articleRef"
-                  disabled
-                  class="table-input"
-                />
+                <input type="text" [value]="liv.articleRef" disabled class="table-input" />
               </td>
 
               <!-- Article Nom -->
@@ -202,19 +185,7 @@
 
               <!-- Client -->
               <td>
-                <select *ngIf="isEditing(liv)" [(ngModel)]="liv.clientNom" class="table-select">
-                  <option value="">Sélectionner un client</option>
-                  <option *ngFor="let client of availableClients()" [value]="client">
-                    {{ client }}
-                  </option>
-                </select>
-                <input
-                  *ngIf="!isEditing(liv)"
-                  type="text"
-                  [value]="liv.clientNom"
-                  disabled
-                  class="table-input"
-                />
+                <input type="text" [value]="liv.clientNom" disabled class="table-input" />
               </td>
 
               <!-- N° Commande Client -->
@@ -222,15 +193,15 @@
                 <select
                   *ngIf="isEditing(liv)"
                   [(ngModel)]="liv.numeroCommandeClient"
+                  (ngModelChange)="onCommandeChange(liv)"
                   class="table-select"
-                  [disabled]="!liv.articleRef || !liv.clientNom"
                 >
                   <option value="">Sélectionner une commande</option>
                   <option
-                    *ngFor="let cmd of getFilteredCommandes(liv.articleRef, liv.clientNom)"
+                    *ngFor="let cmd of availableCommandes()"
                     [value]="cmd.numeroCommandeClient"
                   >
-                    {{ cmd.numeroCommandeClient }} (Restant: {{ cmd.quantiteRestante }})
+                    {{ cmd.numeroCommandeClient }} - {{ cmd.articleRef }} ({{ cmd.clientNom }}) - Restant: {{ cmd.quantiteRestante }}
                   </option>
                 </select>
                 <input

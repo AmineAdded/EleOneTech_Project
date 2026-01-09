@@ -14,6 +14,7 @@ import { Chart, registerables } from 'chart.js';
 import { CommandeService, CommandeResponse } from '../../services/commande.service';
 import { ProcessService, ProcessResponse } from '../../services/process.service';
 import { ArticleService, ArticleResponse } from '../../services/article.service';
+import { TauxChargeExportService } from '../../services/taux-charge-export.service';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 Chart.register(...registerables, ChartDataLabels);
@@ -42,7 +43,7 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
   selectedMonth = signal<number>(new Date().getMonth() + 1);
   dateDebut = signal<string>('');
   dateFin = signal<string>('');
-  heuresDisponibles = signal<number>(160); // Défaut: ~160h/mois
+  heuresDisponibles = signal<number>(160);
 
   // Données
   allProcess = signal<ProcessResponse[]>([]);
@@ -78,7 +79,8 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
   constructor(
     private commandeService: CommandeService,
     private processService: ProcessService,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    private exportService: TauxChargeExportService
   ) {}
 
   ngOnInit() {
@@ -92,17 +94,13 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
   loadInitialData() {
     this.isLoading.set(true);
 
-    // Charger tous les process
     this.processService.getAllProcess().subscribe({
       next: (process) => {
         this.allProcess.set(process);
 
-        // Charger tous les articles
         this.articleService.getAllArticles().subscribe({
           next: (articles) => {
             this.allArticles.set(articles);
-
-            // Charger les commandes initiales
             this.loadCommandes();
           },
           error: (err) => {
@@ -126,13 +124,9 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
 
     this.commandeService.getAllCommandes().subscribe({
       next: (allCommandes) => {
-        // Filtrer selon la période sélectionnée
         const filtered = this.filterCommandesByPeriod(allCommandes);
         this.commandes.set(filtered);
-
-        // Calculer les taux de charge
         this.calculateChargeData();
-
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -180,7 +174,6 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
 
     const chargeDataMap = new Map<string, ProcessChargeData>();
 
-    // Initialiser tous les process avec taux = 0
     process.forEach((proc) => {
       chargeDataMap.set(proc.nom, {
         processNom: proc.nom,
@@ -189,24 +182,18 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
       });
     });
 
-    // Parcourir les commandes
     commandes.forEach((cmd) => {
-      // Trouver l'article correspondant
       const article = articles.find((a) => a.ref === cmd.articleRef);
-
       if (!article) return;
 
-      // Parcourir les process de cet article
       article.processes.forEach((processDetail) => {
         const processNom = processDetail.name;
         const tempsParPFSecondes = processDetail.tempsParPF || 0;
         const quantite = cmd.quantite;
 
-        // Convertir en heures
         const tempsParPFHeures = tempsParPFSecondes / 3600;
         const tempsTotal = quantite * tempsParPFHeures;
 
-        // Ajouter au temps nécessaire de ce process
         const existing = chargeDataMap.get(processNom);
         if (existing) {
           existing.tempsNecessaire += tempsTotal;
@@ -214,19 +201,15 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
       });
     });
 
-    // Calculer les taux de charge en pourcentage
     chargeDataMap.forEach((data) => {
       data.tauxCharge = (data.tempsNecessaire / heuresDisponibles) * 100;
     });
 
-    // Convertir en tableau et trier par nom
     const chargeArray = Array.from(chargeDataMap.values()).sort((a, b) =>
       a.processNom.localeCompare(b.processNom, 'fr')
     );
 
     this.chargeData.set(chargeArray);
-
-    // Mettre à jour le graphique
     this.updateChart();
   }
 
@@ -254,61 +237,51 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
         plugins: {
           datalabels: {
             anchor: 'end',
             align: 'top',
             formatter: (value) => value.toFixed(2) + '%',
-            font: {
-              size: 12,
-              weight: 'bold',
-            },
+            font: { size: 12, weight: 'bold' },
             color: '#333',
           },
           legend: {
             display: true,
             position: 'top',
             labels: {
-              padding: 40, // espace vertical entre les items
-              boxWidth: 30, // largeur carré
-              boxHeight: 18, // hauteur carré
-              generateLabels: () => {
-                return [
-                  {
-                    text: '< 50% : Sous-charge',
-                    fillStyle: 'rgba(33,150,243,0.7)',
-                    strokeStyle: 'rgba(33,150,243,1)',
-                    lineWidth: 2,
-                  },
-                  {
-                    text: '50-80% : Optimal',
-                    fillStyle: 'rgba(76,175,80,0.7)',
-                    strokeStyle: 'rgba(76,175,80,1)',
-                    lineWidth: 2,
-                  },
-                  {
-                    text: '80-100% : Proche saturation',
-                    fillStyle: 'rgba(255,152,0,0.7)',
-                    strokeStyle: 'rgba(255,152,0,1)',
-                    lineWidth: 2,
-                  },
-                  {
-                    text: '> 100% : Surcharge',
-                    fillStyle: 'rgba(244,67,54,0.7)',
-                    strokeStyle: 'rgba(244,67,54,1)',
-                    lineWidth: 2,
-                  },
-                ];
-              },
-              font: {
-                size: 14,
-                weight: 'bold',
-              },
+              padding: 40,
+              boxWidth: 30,
+              boxHeight: 18,
+              generateLabels: () => [
+                {
+                  text: '< 50% : Sous-charge',
+                  fillStyle: 'rgba(33,150,243,0.7)',
+                  strokeStyle: 'rgba(33,150,243,1)',
+                  lineWidth: 2,
+                },
+                {
+                  text: '50-80% : Optimal',
+                  fillStyle: 'rgba(76,175,80,0.7)',
+                  strokeStyle: 'rgba(76,175,80,1)',
+                  lineWidth: 2,
+                },
+                {
+                  text: '80-100% : Proche saturation',
+                  fillStyle: 'rgba(255,152,0,0.7)',
+                  strokeStyle: 'rgba(255,152,0,1)',
+                  lineWidth: 2,
+                },
+                {
+                  text: '> 100% : Surcharge',
+                  fillStyle: 'rgba(244,67,54,0.7)',
+                  strokeStyle: 'rgba(244,67,54,1)',
+                  lineWidth: 2,
+                },
+              ],
+              font: { size: 14, weight: 'bold' },
               color: '#333',
             },
           },
-
           tooltip: {
             callbacks: {
               label: (context) => {
@@ -329,7 +302,6 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
             cornerRadius: 8,
           },
         },
-
         scales: {
           y: {
             beginAtZero: true,
@@ -357,8 +329,8 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
             ticks: {
               font: { size: 11, weight: 'bold' },
               autoSkip: true,
-            maxRotation: 40,
-            minRotation: 40,
+              maxRotation: 40,
+              minRotation: 40,
               color: '#333',
             },
           },
@@ -374,17 +346,11 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
     const labels = data.map((d) => d.processNom);
     const values = data.map((d) => d.tauxCharge);
 
-    // Couleurs selon le taux
     const colors = values.map((value) => {
-      if (value > 100) {
-        return 'rgba(244, 67, 54, 0.7)'; // Rouge - surcharge
-      } else if (value > 80) {
-        return 'rgba(255, 152, 0, 0.7)'; // Orange - proche saturation
-      } else if (value > 50) {
-        return 'rgba(76, 175, 80, 0.7)'; // Vert - optimal
-      } else {
-        return 'rgba(33, 150, 243, 0.7)'; // Bleu - sous-charge
-      }
+      if (value > 100) return 'rgba(244, 67, 54, 0.7)';
+      else if (value > 80) return 'rgba(255, 152, 0, 0.7)';
+      else if (value > 50) return 'rgba(76, 175, 80, 0.7)';
+      else return 'rgba(33, 150, 243, 0.7)';
     });
 
     const borderColors = colors.map((color) => color.replace('0.7', '1'));
@@ -436,8 +402,32 @@ export class TauxChargeComponent implements OnInit, AfterViewInit {
     }
   }
 
-  exportData() {
-    // Export vers Excel ou CSV si nécessaire
-    console.log('Export des données:', this.chargeData());
+  exportToExcel() {
+    const data = this.chargeData();
+    
+    if (data.length === 0) {
+      console.warn('⚠️ Aucune donnée à exporter');
+      return;
+    }
+
+    const periode = this.getPeriodLabel();
+    const heuresDisponibles = this.heuresDisponibles();
+
+    const exportData = data.map(item => ({
+      processNom: item.processNom,
+      tempsNecessaire: item.tempsNecessaire,
+      heuresDisponibles: heuresDisponibles,
+      tauxCharge: item.tauxCharge,
+      statut: this.getStatutLabel(item.tauxCharge)
+    }));
+
+    this.exportService.exportToExcel(exportData, periode, heuresDisponibles);
+  }
+
+  private getStatutLabel(tauxCharge: number): string {
+    if (tauxCharge < 50) return 'Sous-charge';
+    else if (tauxCharge >= 50 && tauxCharge <= 80) return 'Optimal';
+    else if (tauxCharge > 80 && tauxCharge <= 100) return 'Proche saturation';
+    else return '⚠ Surcharge';
   }
 }
