@@ -257,16 +257,35 @@
                 </select>
               </td>
 
-              <!-- Prix Unitaire -->
-              <td>
-                <input
-                  type="number"
-                  step="0.01"
-                  [(ngModel)]="article.prixUnitaire"
-                  [disabled]="!article.isEditing"
-                  class="table-input"
-                  placeholder="0.00"
-                />
+              <!-- Prix Unitaire avec conversion de devises -->
+              <td class="price-cell">
+                <!-- Mode édition: affichage en TND uniquement -->
+                <div *ngIf="article.isEditing" class="price-input-container">
+                  <input
+                    type="number"
+                    step="0.01"
+                    [(ngModel)]="article.prixUnitaire"
+                    class="table-input price-input"
+                    placeholder="0.00"
+                  />
+                  <span class="currency-label">DT</span>
+                </div>
+
+                <!-- Mode affichage: liste déroulante de devises avec conversion -->
+                <div *ngIf="!article.isEditing" class="price-display-container">
+                  <div class="price-amount">
+                    {{ formatPrice(article) }}
+                  </div>
+                  <select
+                    class="currency-select"
+                    [(ngModel)]="article.displayCurrency"
+                    (ngModelChange)="onCurrencyChange(i, $event)"
+                  >
+                    <option value="TND">DT</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
               </td>
 
               <!-- MPQ -->
@@ -341,8 +360,35 @@
                         <td class="process-value">{{ process.cadenceMax }}</td>
                       </tr>
                     </tbody>
-                    <!-- ✅ Ligne TOTAUX dans tfoot pour qu'elle reste visible -->
+                    <!-- ✅ Ligne GOULOT D'ÉTRANGLEMENT avant les totaux -->
                     <tfoot>
+                      <tr
+                        class="process-bottleneck-row"
+                        *ngIf="getBottleneckInfo(article.processes)"
+                      >
+                        <td class="bottleneck-label">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                          Goulot d'étranglement
+                        </td>
+                        <td class="bottleneck-process">
+                          {{ getBottleneckInfo(article.processes)?.processName }}
+                        </td>
+                        <td class="bottleneck-value">
+                          <span class="bottleneck-badge">
+                            🔴 {{ getBottleneckInfo(article.processes)?.cadence }}
+                          </span>
+                        </td>
+                      </tr>
                       <tr class="process-total-row">
                         <td class="process-total-label">
                           <svg
@@ -359,12 +405,7 @@
                         <td class="process-total-value">
                           {{ calculateTotalTime(article.processes).toFixed(2) }} s
                         </td>
-                        <td class="process-total-value">
-                          <span *ngIf="calculateBottleneck(article.processes)" class="bottleneck">
-                            🔴 {{ calculateBottleneck(article.processes) }}
-                          </span>
-                          <span *ngIf="!calculateBottleneck(article.processes)">-</span>
-                        </td>
+                        <td class="process-total-value">-</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -436,7 +477,10 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="paginatedArticles().length === 0 && filteredArticles().length > 0" class="empty-state">
+      <div
+        *ngIf="paginatedArticles().length === 0 && filteredArticles().length > 0"
+        class="empty-state"
+      >
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="16" />
@@ -475,7 +519,7 @@
         title="Page précédente"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
 
@@ -499,13 +543,14 @@
         title="Page suivante"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <polyline points="9 18 15 12 9 6"/>
+          <polyline points="9 18 15 12 9 6" />
         </svg>
       </button>
 
       <div class="pagination-info">
-        Page {{ currentPage() }} sur {{ totalPages() }}
-        ({{ filteredArticles().length }} article{{ filteredArticles().length > 1 ? 's' : '' }})
+        Page {{ currentPage() }} sur {{ totalPages() }} ({{ filteredArticles().length }} article{{
+          filteredArticles().length > 1 ? 's' : ''
+        }})
       </div>
     </div>
   </div>

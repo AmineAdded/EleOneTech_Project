@@ -2,10 +2,19 @@
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProcessManagerComponent, ProcessDetail } from '../process-manager/process-manager.component';
+import {
+  ProcessManagerComponent,
+  ProcessDetail,
+} from '../process-manager/process-manager.component';
 import { ClientsManagerComponent } from '../clients-manager/clients-manager.component';
 import { ClientService } from '../../services/client.service';
-import { ArticleService, ArticleResponse, CreateArticleRequest, UpdateArticleRequest } from '../../services/article.service';
+import {
+  ArticleService,
+  ArticleResponse,
+  CreateArticleRequest,
+  UpdateArticleRequest,
+} from '../../services/article.service';
+import { CurrencyService } from '../../services/currency.service';
 
 interface Article {
   id?: number;
@@ -15,7 +24,7 @@ interface Article {
   sousFamille: string;
   typeProcess: string;
   typeProduit: string;
-  prixUnitaire: number;
+  prixUnitaire: number; // Toujours stocké en TND
   mpq: number;
   stock: number;
   imageFilename?: string;
@@ -26,6 +35,7 @@ interface Article {
   createdAt?: string;
   isEditing?: boolean;
   isNew?: boolean;
+  displayCurrency?: 'EUR' | 'USD' | 'TND'; // Devise d'affichage
 }
 
 @Component({
@@ -33,7 +43,7 @@ interface Article {
   standalone: true,
   imports: [CommonModule, FormsModule, ProcessManagerComponent, ClientsManagerComponent],
   templateUrl: './articles-table.component.html',
-  styleUrl: './articles-table.component.css'
+  styleUrl: './articles-table.component.css',
 })
 export class ArticlesTableComponent implements OnInit {
   articles = signal<Article[]>([]);
@@ -52,19 +62,22 @@ export class ArticlesTableComponent implements OnInit {
   availableTypeProduits = signal<string[]>([]);
   availableTypeProcess = signal<string[]>([]);
 
-  // ✅ PAGINATION
   currentPage = signal(1);
   itemsPerPage = 3;
 
   isLoading = signal(false);
   errorMessage = signal('');
 
+  // Devises disponibles
+  currencies: Array<'EUR' | 'USD' | 'TND'> = ['TND', 'EUR', 'USD'];
+
   private originalArticles: { [key: number]: Article } = {};
   private editingArticles: Set<number> = new Set();
 
   constructor(
     private clientService: ClientService,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    public currencyService: CurrencyService
   ) {}
 
   ngOnInit() {
@@ -77,42 +90,41 @@ export class ArticlesTableComponent implements OnInit {
     this.clientService.getAllClientsSimple().subscribe({
       next: (clients) => {
         const sortedClients = clients
-          .map(c => c.nomComplet)
+          .map((c) => c.nomComplet)
           .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
-
         this.availableClients.set(sortedClients);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des clients:', error);
         this.errorMessage.set('Erreur lors du chargement des clients');
-      }
+      },
     });
   }
 
   loadDistinctValues() {
     this.articleService.getDistinctRefs().subscribe({
       next: (refs) => this.availableRefs.set(refs),
-      error: (error) => console.error('Erreur refs:', error)
+      error: (error) => console.error('Erreur refs:', error),
     });
 
     this.articleService.getDistinctNoms().subscribe({
       next: (noms) => this.availableNoms.set(noms),
-      error: (error) => console.error('Erreur noms:', error)
+      error: (error) => console.error('Erreur noms:', error),
     });
 
     this.articleService.getDistinctFamilles().subscribe({
       next: (familles) => this.availableFamilles.set(familles),
-      error: (error) => console.error('Erreur familles:', error)
+      error: (error) => console.error('Erreur familles:', error),
     });
 
     this.articleService.getDistinctTypeProduits().subscribe({
       next: (types) => this.availableTypeProduits.set(types),
-      error: (error) => console.error('Erreur types produits:', error)
+      error: (error) => console.error('Erreur types produits:', error),
     });
 
     this.articleService.getDistinctTypeProcess().subscribe({
       next: (types) => this.availableTypeProcess.set(types),
-      error: (error) => console.error('Erreur types process:', error)
+      error: (error) => console.error('Erreur types process:', error),
     });
   }
 
@@ -120,7 +132,7 @@ export class ArticlesTableComponent implements OnInit {
     this.isLoading.set(true);
     this.articleService.getAllArticles().subscribe({
       next: (articles) => {
-        const mapped: Article[] = articles.map(a => ({
+        const mapped: Article[] = articles.map((a) => ({
           id: a.id,
           ref: a.ref,
           article: a.article,
@@ -136,7 +148,8 @@ export class ArticlesTableComponent implements OnInit {
           clients: a.clients || [],
           createdAt: a.createdAt,
           isEditing: false,
-          isNew: false
+          isNew: false,
+          displayCurrency: 'TND', // Par défaut en TND
         }));
         mapped.sort((a, b) => {
           const dateA = new Date(a.createdAt || 0).getTime();
@@ -144,14 +157,14 @@ export class ArticlesTableComponent implements OnInit {
           return dateB - dateA;
         });
         this.articles.set(mapped);
-        this.currentPage.set(1); // ✅ Reset à la page 1
+        this.currentPage.set(1);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des articles:', error);
         this.errorMessage.set('Erreur lors du chargement des articles');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -168,7 +181,6 @@ export class ArticlesTableComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-
     let searchObservable;
 
     if (ref) {
@@ -185,7 +197,7 @@ export class ArticlesTableComponent implements OnInit {
 
     searchObservable.subscribe({
       next: (articles) => {
-        const mapped: Article[] = articles.map(a => ({
+        const mapped: Article[] = articles.map((a) => ({
           id: a.id,
           ref: a.ref,
           article: a.article,
@@ -201,17 +213,18 @@ export class ArticlesTableComponent implements OnInit {
           clients: a.clients || [],
           createdAt: a.createdAt,
           isEditing: false,
-          isNew: false
+          isNew: false,
+          displayCurrency: 'TND',
         }));
         this.articles.set(mapped);
-        this.currentPage.set(1); // ✅ Reset à la page 1
+        this.currentPage.set(1);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error(error);
         this.errorMessage.set('Erreur lors de la recherche');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -229,20 +242,20 @@ export class ArticlesTableComponent implements OnInit {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.articles();
 
-    return this.articles().filter(article =>
-      article.ref?.toLowerCase().includes(term) ||
-      article.article?.toLowerCase().includes(term) ||
-      article.famille?.toLowerCase().includes(term) ||
-      article.sousFamille?.toLowerCase().includes(term) ||
-      article.typeProcess?.toLowerCase().includes(term) ||
-      article.typeProduit?.toLowerCase().includes(term) ||
-      article.stock?.toString().includes(term) ||
-      article.clients.some(c => c.toLowerCase().includes(term)) ||
-      article.processes.some(p => p.name.toLowerCase().includes(term))
+    return this.articles().filter(
+      (article) =>
+        article.ref?.toLowerCase().includes(term) ||
+        article.article?.toLowerCase().includes(term) ||
+        article.famille?.toLowerCase().includes(term) ||
+        article.sousFamille?.toLowerCase().includes(term) ||
+        article.typeProcess?.toLowerCase().includes(term) ||
+        article.typeProduit?.toLowerCase().includes(term) ||
+        article.stock?.toString().includes(term) ||
+        article.clients.some((c) => c.toLowerCase().includes(term)) ||
+        article.processes.some((p) => p.name.toLowerCase().includes(term))
     );
   });
 
-  // ✅ PAGINATION: Articles paginés
   paginatedArticles = computed(() => {
     const filtered = this.filteredArticles();
     const start = (this.currentPage() - 1) * this.itemsPerPage;
@@ -250,12 +263,10 @@ export class ArticlesTableComponent implements OnInit {
     return filtered.slice(start, end);
   });
 
-  // ✅ PAGINATION: Nombre total de pages
   totalPages = computed(() => {
     return Math.ceil(this.filteredArticles().length / this.itemsPerPage);
   });
 
-  // ✅ PAGINATION: Navigation
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
@@ -264,17 +275,16 @@ export class ArticlesTableComponent implements OnInit {
 
   nextPage() {
     if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update(p => p + 1);
+      this.currentPage.update((p) => p + 1);
     }
   }
 
   previousPage() {
     if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
+      this.currentPage.update((p) => p - 1);
     }
   }
 
-  // ✅ PAGINATION: Array de numéros de pages
   getPageNumbers(): number[] {
     const total = this.totalPages();
     const current = this.currentPage();
@@ -287,17 +297,17 @@ export class ArticlesTableComponent implements OnInit {
     } else {
       if (current <= 4) {
         for (let i = 1; i <= 5; i++) pages.push(i);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         pages.push(total);
       } else if (current >= total - 3) {
         pages.push(1);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         for (let i = total - 4; i <= total; i++) pages.push(i);
       } else {
         pages.push(1);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         for (let i = current - 1; i <= current + 1; i++) pages.push(i);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         pages.push(total);
       }
     }
@@ -305,7 +315,38 @@ export class ArticlesTableComponent implements OnInit {
     return pages;
   }
 
-  // Reste des méthodes inchangées...
+  /**
+   * Convertit et affiche le prix selon la devise sélectionnée
+   */
+  getConvertedPrice(article: Article): number {
+    if (!article.displayCurrency) {
+      article.displayCurrency = 'TND';
+    }
+    return this.currencyService.convertFromTND(article.prixUnitaire, article.displayCurrency);
+  }
+
+  /**
+   * Formate le prix avec la devise
+   */
+  formatPrice(article: Article): string {
+    const converted = this.getConvertedPrice(article);
+    return this.currencyService.formatAmount(converted, article.displayCurrency || 'TND');
+  }
+
+  /**
+   * Change la devise d'affichage pour un article
+   */
+  onCurrencyChange(index: number, currency: 'EUR' | 'USD' | 'TND') {
+    const article = this.paginatedArticles()[index];
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
+
+    this.articles.update((articles) => {
+      const updated = [...articles];
+      updated[realIndex].displayCurrency = currency;
+      return updated;
+    });
+  }
+
   onImageSelected(event: Event, index: number) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -318,16 +359,16 @@ export class ArticlesTableComponent implements OnInit {
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      this.errorMessage.set('L\'image ne doit pas dépasser 5MB');
+      this.errorMessage.set("L'image ne doit pas dépasser 5MB");
       return;
     }
 
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.articles.update(articles => {
+      this.articles.update((articles) => {
         const updated = [...articles];
         updated[realIndex].imagePreview = e.target?.result as string;
         updated[realIndex].imageFile = file;
@@ -339,9 +380,9 @@ export class ArticlesTableComponent implements OnInit {
 
   removeImage(index: number) {
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
-    this.articles.update(articles => {
+    this.articles.update((articles) => {
       const updated = [...articles];
       updated[realIndex].imagePreview = undefined;
       updated[realIndex].imageFile = undefined;
@@ -358,10 +399,23 @@ export class ArticlesTableComponent implements OnInit {
     return processes.reduce((sum, p) => sum + (p.tempsParPF || 0), 0);
   }
 
-  calculateBottleneck(processes: ProcessDetail[]): number | null {
+  getBottleneckInfo(processes: ProcessDetail[]): { processName: string; cadence: number } | null {
     if (processes.length === 0) return null;
-    const cadences = processes.map(p => p.cadenceMax).filter(c => c > 0);
-    return cadences.length > 0 ? Math.min(...cadences) : null;
+
+    // Filtrer les process avec une cadence > 0
+    const processesWithCadence = processes.filter((p) => p.cadenceMax > 0);
+
+    if (processesWithCadence.length === 0) return null;
+
+    // Trouver le process avec la cadence minimum
+    const bottleneckProcess = processesWithCadence.reduce((min, current) =>
+      current.cadenceMax < min.cadenceMax ? current : min
+    );
+
+    return {
+      processName: bottleneckProcess.name,
+      cadence: bottleneckProcess.cadenceMax,
+    };
   }
 
   formatDate(dateString: string | undefined): string {
@@ -396,23 +450,24 @@ export class ArticlesTableComponent implements OnInit {
       processes: [],
       clients: [],
       isEditing: true,
-      isNew: true
+      isNew: true,
+      displayCurrency: 'TND',
     };
 
-    this.articles.update(articles => [newArticle, ...articles]);
-    this.currentPage.set(1); // ✅ Aller à la première page
+    this.articles.update((articles) => [newArticle, ...articles]);
+    this.currentPage.set(1);
   }
 
   editRow(index: number) {
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
     if (!article.isNew && article.id) {
       this.originalArticles[article.id] = JSON.parse(JSON.stringify(article));
       this.editingArticles.add(article.id);
     }
 
-    this.articles.update(articles => {
+    this.articles.update((articles) => {
       const updated = [...articles];
       updated[realIndex] = { ...updated[realIndex], isEditing: true };
       return updated;
@@ -421,7 +476,7 @@ export class ArticlesTableComponent implements OnInit {
 
   saveRow(index: number) {
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
     if (!article.ref?.trim()) {
       this.errorMessage.set('La référence est obligatoire');
@@ -429,7 +484,7 @@ export class ArticlesTableComponent implements OnInit {
     }
 
     if (!article.article?.trim()) {
-      this.errorMessage.set('Le nom de l\'article est obligatoire');
+      this.errorMessage.set("Le nom de l'article est obligatoire");
       return;
     }
 
@@ -448,7 +503,7 @@ export class ArticlesTableComponent implements OnInit {
         mpq: article.mpq || 0,
         stock: article.stock || 0,
         clients: article.clients || [],
-        processes: article.processes || []
+        processes: article.processes || [],
       };
 
       this.articleService.createArticle(request).subscribe({
@@ -461,11 +516,11 @@ export class ArticlesTableComponent implements OnInit {
                 this.isLoading.set(false);
               },
               error: (err) => {
-                this.errorMessage.set('Article créé mais erreur lors de l\'upload de l\'image');
+                this.errorMessage.set("Article créé mais erreur lors de l'upload de l'image");
                 this.loadArticles();
                 this.loadDistinctValues();
                 this.isLoading.set(false);
-              }
+              },
             });
           } else {
             this.loadArticles();
@@ -476,9 +531,8 @@ export class ArticlesTableComponent implements OnInit {
         error: (err) => {
           this.errorMessage.set(err.error?.message || 'Erreur lors de la création');
           this.isLoading.set(false);
-        }
+        },
       });
-
     } else if (article.id) {
       const request: UpdateArticleRequest = {
         ref: article.ref,
@@ -491,7 +545,7 @@ export class ArticlesTableComponent implements OnInit {
         mpq: article.mpq || 0,
         stock: article.stock || 0,
         clients: article.clients || [],
-        processes: article.processes || []
+        processes: article.processes || [],
       };
 
       this.articleService.updateArticle(article.id, request).subscribe({
@@ -507,7 +561,7 @@ export class ArticlesTableComponent implements OnInit {
                 this.loadArticles();
                 this.loadDistinctValues();
                 this.isLoading.set(false);
-              }
+              },
             });
           } else if (!article.imagePreview && !article.imageFilename) {
             this.articleService.deleteImage(article.id!).subscribe({
@@ -520,7 +574,7 @@ export class ArticlesTableComponent implements OnInit {
                 this.loadArticles();
                 this.loadDistinctValues();
                 this.isLoading.set(false);
-              }
+              },
             });
           } else {
             this.loadArticles();
@@ -531,24 +585,24 @@ export class ArticlesTableComponent implements OnInit {
         error: (err) => {
           this.errorMessage.set(err.error?.message || 'Erreur lors de la mise à jour');
           this.isLoading.set(false);
-        }
+        },
       });
     }
   }
 
   cancelEdit(index: number) {
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
     if (article.isNew) {
-      this.articles.update(articles => articles.filter((_, i) => i !== realIndex));
+      this.articles.update((articles) => articles.filter((_, i) => i !== realIndex));
       return;
     }
 
     if (article.id) {
       const original = this.originalArticles[article.id];
       if (original) {
-        this.articles.update(articles => {
+        this.articles.update((articles) => {
           const updated = [...articles];
           updated[realIndex] = { ...original, isEditing: false };
           return updated;
@@ -561,10 +615,10 @@ export class ArticlesTableComponent implements OnInit {
 
   deleteRow(index: number) {
     const article = this.paginatedArticles()[index];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
     if (article.isNew) {
-      this.articles.update(articles => articles.filter((_, i) => i !== realIndex));
+      this.articles.update((articles) => articles.filter((_, i) => i !== realIndex));
       return;
     }
 
@@ -583,15 +637,15 @@ export class ArticlesTableComponent implements OnInit {
         console.error(err);
         this.errorMessage.set('Erreur lors de la suppression');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
   updateClients(articleIndex: number, clients: string[]) {
     const article = this.paginatedArticles()[articleIndex];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
-    this.articles.update(articles => {
+    this.articles.update((articles) => {
       const updated = [...articles];
       updated[realIndex].clients = clients;
       return updated;
@@ -600,9 +654,9 @@ export class ArticlesTableComponent implements OnInit {
 
   updateProcesses(articleIndex: number, processes: ProcessDetail[]) {
     const article = this.paginatedArticles()[articleIndex];
-    const realIndex = this.articles().findIndex(a => a.id === article.id);
+    const realIndex = this.articles().findIndex((a) => a.id === article.id);
 
-    this.articles.update(articles => {
+    this.articles.update((articles) => {
       const updated = [...articles];
       updated[realIndex].processes = processes;
       return updated;
